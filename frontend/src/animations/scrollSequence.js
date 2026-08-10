@@ -244,6 +244,10 @@ export function initScrollSequence() {
 
   const canvas = section.querySelector("[data-sequence-canvas]");
   const context = canvas?.getContext("2d");
+  const debugImg = section.querySelector("[data-sequence-debug-img]");
+
+  // DEBUG MODE: Hide canvas, rely on debug img
+  if (canvas) canvas.style.opacity = "0";
 
   if (!canvas || !context) {
     return null;
@@ -321,8 +325,30 @@ export function initScrollSequence() {
     }
   }
 
+  // Throttler for logs
+  let lastLogTime = 0;
+
   function renderFrame(frameIndex) {
     const image = getNearestFrame(frames, frameIndex);
+
+    const now = Date.now();
+    if (now - lastLogTime > 200) {
+      console.log({
+        action: "RENDER_FRAME_LOG",
+        frameIndex,
+        frameSource: frameSources[frameIndex],
+        frameValid: isFrameValid(frames[frameIndex]),
+        nearestImageExists: !!image,
+        nearestImageComplete: image?.complete,
+        nearestImageWidth: image?.naturalWidth,
+        nearestImageHeight: image?.naturalHeight,
+        canvasWidth: canvas.width,
+        canvasHeight: canvas.height,
+        canvasRectWidth: canvas.getBoundingClientRect().width,
+        canvasRectHeight: canvas.getBoundingClientRect().height,
+      });
+      lastLogTime = now;
+    }
 
     if (!image) {
       return;
@@ -330,6 +356,12 @@ export function initScrollSequence() {
 
     state.currentFrame = frameIndex;
     evictOldFrames(frameIndex);
+    
+    // DEBUG MODE: Render to img instead of canvas
+    if (debugImg && image.src) {
+      debugImg.src = image.src;
+    }
+
     drawContain(context, image, canvas.width, canvas.height, config.frameFit);
   }
 
@@ -409,6 +441,7 @@ export function initScrollSequence() {
       }
 
       let isTicking = false;
+      let lastScrollLog = 0;
 
       function onScroll() {
         if (!isTicking) {
@@ -420,7 +453,22 @@ export function initScrollSequence() {
             if (scrollDistance > 0) {
               let progress = -rect.top / scrollDistance;
               progress = Math.max(0, Math.min(1, progress));
-              queueFrame(Math.round(progress * (frames.length - 1)));
+              const frameIndex = Math.round(progress * (frames.length - 1));
+              
+              const now = Date.now();
+              if (now - lastScrollLog > 200) {
+                console.log({
+                  action: "SCROLL_LOG",
+                  scrollY: window.scrollY,
+                  progress,
+                  frameIndex,
+                  frameSource: frameSources[frameIndex],
+                  frameValid: isFrameValid(frames[frameIndex])
+                });
+                lastScrollLog = now;
+              }
+
+              queueFrame(frameIndex);
             }
             isTicking = false;
           });
@@ -432,11 +480,14 @@ export function initScrollSequence() {
 
       canvas.addEventListener("contextlost", (e) => {
         e.preventDefault();
-        console.warn("Canvas context lost on Android.");
+        console.log("SEQUENCE CANVAS CONTEXT LOST", {
+          width: canvas.width,
+          height: canvas.height
+        });
       });
 
       canvas.addEventListener("contextrestored", () => {
-        console.log("Canvas context restored.");
+        console.log("SEQUENCE CANVAS CONTEXT RESTORED");
         context.imageSmoothingEnabled = true;
         context.imageSmoothingQuality = "high";
         renderFrame(state.currentFrame);

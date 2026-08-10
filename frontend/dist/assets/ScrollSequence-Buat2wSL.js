@@ -1,23 +1,4 @@
-export const SCROLL_SEQUENCE_CONFIG = {
-  frameCount: 216,
-  frameStart: 1,
-  framePad: 4,
-  framePath: "/images/sequence/frame_{frame}.jpg",
-  frameFit: "contain",
-};
-
-export function createScrollSequenceSection(config = {}) {
-  const settings = { ...SCROLL_SEQUENCE_CONFIG, ...config };
-  const section = document.createElement("section");
-
-  section.className = "scroll-sequence";
-  section.dataset.scrollSequence = "generator";
-  section.dataset.frameCount = String(settings.frameCount);
-  section.dataset.frameStart = String(settings.frameStart);
-  section.dataset.framePad = String(settings.framePad);
-  section.dataset.framePath = settings.framePath;
-  section.dataset.frameFit = settings.frameFit;
-  section.innerHTML = `
+const t={frameCount:216,frameStart:1,framePad:4,framePath:"/images/sequence/frame_{frame}.jpg",frameFit:"contain"};function n(s={}){const a={...t,...s},e=document.createElement("section");return e.className="scroll-sequence",e.dataset.scrollSequence="generator",e.dataset.frameCount=String(a.frameCount),e.dataset.frameStart=String(a.frameStart),e.dataset.framePad=String(a.framePad),e.dataset.framePath=a.framePath,e.dataset.frameFit=a.frameFit,e.innerHTML=`
     <div class="scroll-sequence__pin">
       <canvas
         class="scroll-sequence__canvas"
@@ -46,7 +27,4 @@ export function createScrollSequenceSection(config = {}) {
         </span>
       </div>
     </div>
-  `;
-
-  return section;
-}
+  `,e}export{t as SCROLL_SEQUENCE_CONFIG,n as createScrollSequenceSection};
