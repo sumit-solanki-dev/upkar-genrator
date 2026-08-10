@@ -85,7 +85,7 @@ function loadImage(src, priority = "auto") {
   });
 }
 
-function getPreloadOrder(total) {
+function getPreloadOrder(total, isMobile) {
   const order = [];
   const used = new Set();
   const add = (index) => {
@@ -99,6 +99,13 @@ function getPreloadOrder(total) {
 
   add(0);
   add(total - 1);
+
+  if (isMobile) {
+    add(Math.floor(total / 2));
+    add(Math.floor(total / 4));
+    add(Math.floor((total * 3) / 4));
+    return order;
+  }
 
   [8, 4, 2].forEach((segments) => {
     for (let segment = 1; segment < segments; segment += 1) {
@@ -151,7 +158,7 @@ function preloadImages({ frameOrder, frames, loadFrame }) {
 }
 
 function isFrameValid(frame) {
-  return frame !== undefined && frame !== null && frame.complete && frame.naturalWidth > 0;
+  return frame !== undefined && frame !== null && frame !== "failed" && frame.complete && frame.naturalWidth > 0;
 }
 
 function getNearestFrame(frames, targetIndex) {
@@ -198,7 +205,7 @@ function drawContain(context, image, canvasWidth, canvasHeight, fit) {
 }
 
 function updateLoader(section, completed, total) {
-  const progress = total > 0 ? Math.round((completed / total) * 100) : 100;
+  const progress = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 100;
   const progressText = section.querySelector("[data-sequence-progress]");
   const progressBar = section.querySelector("[data-sequence-bar]");
 
@@ -254,8 +261,9 @@ export function initScrollSequence() {
     frameNumbers.push(lastFrameNumber);
   }
 
+  const isMobile = window.innerWidth < 768;
   const frameSources = frameNumbers.map((frameNumber) => getFrameSource(config, frameNumber));
-  const frameOrder = getPreloadOrder(frameSources.length);
+  const frameOrder = getPreloadOrder(frameSources.length, isMobile);
   const frames = new Array(frameSources.length);
   const pendingFrames = new Map();
   const state = {
@@ -271,10 +279,10 @@ export function initScrollSequence() {
   updateLoader(section, 0, frameSources.length);
 
   function recordFrame(frameIndex, image) {
-    if (frames[frameIndex] === undefined) {
-      frames[frameIndex] = image;
+    if (frames[frameIndex] === undefined || frames[frameIndex] === "failed") {
+      frames[frameIndex] = image === null ? "failed" : image;
       state.completed += 1;
-      updateLoader(section, state.completed, frameSources.length);
+      updateLoader(section, state.completed, frameOrder.length);
     }
 
     return image;
@@ -300,6 +308,19 @@ export function initScrollSequence() {
     return frameRequest;
   }
 
+  function evictOldFrames(currentIndex) {
+    if (!isMobile) return;
+    const WINDOW = 25;
+    for (let i = 0; i < frames.length; i++) {
+      if (Math.abs(i - currentIndex) > WINDOW) {
+        if (frames[i] && typeof frames[i] !== "string" && frames[i].src) {
+          frames[i].src = ""; 
+        }
+        frames[i] = undefined;
+      }
+    }
+  }
+
   function renderFrame(frameIndex) {
     const image = getNearestFrame(frames, frameIndex);
 
@@ -308,14 +329,15 @@ export function initScrollSequence() {
     }
 
     state.currentFrame = frameIndex;
+    evictOldFrames(frameIndex);
     drawContain(context, image, canvas.width, canvas.height, config.frameFit);
   }
 
   function resizeCanvas() {
     const bounds = canvas.getBoundingClientRect();
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_DEVICE_PIXEL_RATIO);
-    const width = Math.max(1, Math.round(bounds.width * pixelRatio));
-    const height = Math.max(1, Math.round(bounds.height * pixelRatio));
+    const adaptivePixelRatio = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : MAX_DEVICE_PIXEL_RATIO);
+    const width = Math.max(1, Math.round(bounds.width * adaptivePixelRatio));
+    const height = Math.max(1, Math.round(bounds.height * adaptivePixelRatio));
 
     if (canvas.width !== width || canvas.height !== height) {
       canvas.width = width;
@@ -339,6 +361,15 @@ export function initScrollSequence() {
           });
         }
       });
+    }
+
+    const direction = nextFrame >= state.currentFrame ? 1 : -1;
+    const preloads = isMobile ? 4 : 8;
+    for (let i = 1; i <= preloads; i++) {
+      const ahead = nextFrame + (i * direction);
+      if (ahead >= 0 && ahead < frames.length && frames[ahead] === undefined) {
+        loadFrame(ahead, "low");
+      }
     }
 
     if (state.rafId) {
@@ -398,6 +429,18 @@ export function initScrollSequence() {
 
       window.addEventListener("scroll", onScroll, { passive: true });
       onScroll();
+
+      canvas.addEventListener("contextlost", (e) => {
+        e.preventDefault();
+        console.warn("Canvas context lost on Android.");
+      });
+
+      canvas.addEventListener("contextrestored", () => {
+        console.log("Canvas context restored.");
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = "high";
+        renderFrame(state.currentFrame);
+      });
 
       preloadImages({ frameOrder, frames, loadFrame }).then(() => {
         section.classList.add("is-sequence-ready");
