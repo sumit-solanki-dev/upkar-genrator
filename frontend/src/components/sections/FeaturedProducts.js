@@ -34,7 +34,7 @@ export async function createFeaturedProductsSection() {
                 <figure class="featured-product-card__media">
                   <img
                     src="${product.images[0]}"
-                    alt="${product.model} diesel generator"
+                    alt="${product.name} diesel generator"
                     width="980"
                     height="620"
                     loading="lazy"
@@ -42,15 +42,15 @@ export async function createFeaturedProductsSection() {
                   />
                 </figure>
                 <div class="featured-product-card__body">
-                  <p class="featured-product-card__model">${product.model}</p>
+                  <p class="featured-product-card__model">${product.category}</p>
                   <dl class="featured-product-card__specs">
                     <div>
                       <dt>KVA</dt>
                       <dd>${product.kva} KVA</dd>
                     </div>
                     <div>
-                      <dt>Engine</dt>
-                      <dd>${product.engine}</dd>
+                      <dt>Alternator</dt>
+                      <dd>${product.variants ? product.variants[0].alternator : "Standard"}</dd>
                     </div>
                   </dl>
                   <p class="featured-product-card__description">${product.description}</p>
