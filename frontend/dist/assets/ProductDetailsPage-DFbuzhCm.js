@@ -1,4 +1,4 @@
-import{s as E}from"./index-BN1qWOCw.js";async function q(){try{return await(await fetch(`/products.json?v=${new Date().getTime()}`,{cache:"no-store",headers:{"Cache-Control":"no-cache"}})).json()}catch(a){return console.error("Failed to load products:",a),[]}}function C(a){return`
+import{s as E}from"./index-BPdsZhKd.js";async function q(){try{return await(await fetch(`/products.json?v=${new Date().getTime()}`,{cache:"no-store",headers:{"Cache-Control":"no-cache"}})).json()}catch(a){return console.error("Failed to load products:",a),[]}}function C(a){return`
     <article class="product-listing-card" itemscope itemtype="https://schema.org/Product">
       <figure class="product-listing-card__media">
         <a href="/products/${a.slug}">

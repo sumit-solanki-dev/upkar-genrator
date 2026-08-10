@@ -1,4 +1,4 @@
-﻿const SEQUENCE_ROOT_MARGIN = "650px 0px";
+const SEQUENCE_ROOT_MARGIN = "650px 0px";
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -205,6 +205,7 @@ export function initScrollSequence() {
       if (prefersReducedMotion()) return;
 
       let isTicking = false;
+      let lastDiagLog = 0;
 
       function onScroll() {
         if (!isTicking) {
@@ -212,9 +213,50 @@ export function initScrollSequence() {
           window.requestAnimationFrame(() => {
             const rect = section.getBoundingClientRect();
             const scrollDistance = rect.height - window.innerHeight;
+            
+            let progress = scrollDistance > 0 ? -rect.top / scrollDistance : null;
+
+            const now = Date.now();
+            if (now - lastDiagLog > 200) {
+              console.log("--- SEQUENCE DIAGNOSTIC ---", {
+                  scrollY: window.scrollY,
+                  viewportHeight: window.innerHeight,
+                  rectTop: rect.top,
+                  rectHeight: rect.height,
+                  rectBottom: rect.bottom,
+                  scrollDistance,
+                  progress,
+                  scrollTop: document.documentElement.scrollTop,
+                  scrollHeight: document.documentElement.scrollHeight,
+                  offsetHeight: section.offsetHeight,
+                  sectionScrollHeight: section.scrollHeight,
+                  position: window.getComputedStyle(section).position,
+                  overflow: window.getComputedStyle(section).overflow,
+                  computedHeight: window.getComputedStyle(section).height,
+                  visualViewportHeight: window.visualViewport?.height
+              });
+
+              let parent = section.parentElement;
+              while (parent && parent !== document.documentElement) {
+                const style = window.getComputedStyle(parent);
+                if (style.overflow !== "visible" || style.position === "fixed" || style.position === "sticky" || style.transform !== "none" || style.contain !== "none") {
+                   console.log("RESTRICTIVE PARENT FOUND", {
+                     tag: parent.tagName,
+                     className: parent.className,
+                     overflow: style.overflow,
+                     position: style.position,
+                     transform: style.transform,
+                     height: style.height,
+                     contain: style.contain
+                   });
+                }
+                parent = parent.parentElement;
+              }
+
+              lastDiagLog = now;
+            }
 
             if (scrollDistance > 0) {
-              let progress = -rect.top / scrollDistance;
               progress = Math.max(0, Math.min(1, progress));
               queueFrameUpdate(Math.round(progress * (totalFrames - 1)));
             }
