@@ -309,8 +309,11 @@ export function initScrollSequence() {
 
     if (frames[nextFrame] === undefined) {
       loadFrame(nextFrame, "high").then((image) => {
-        if (image && state.drawFrame === nextFrame) {
-          renderFrame(nextFrame);
+        if (image && !state.rafId) {
+          state.rafId = window.requestAnimationFrame(() => {
+            state.rafId = 0;
+            renderFrame(state.drawFrame);
+          });
         }
       });
     }
