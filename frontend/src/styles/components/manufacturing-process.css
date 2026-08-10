@@ -1,0 +1,212 @@
+.manufacturing-process {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface);
+  padding: var(--space-16) 0;
+}
+
+.manufacturing-process::before {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, var(--color-blueprint-line) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+  background-size: 86px 86px;
+  content: "";
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.manufacturing-process__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-10);
+}
+
+.manufacturing-process__heading {
+  max-width: 44rem;
+}
+
+.manufacturing-process__eyebrow {
+  margin: 0 0 var(--space-3);
+  color: var(--color-accent);
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.manufacturing-process__title {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: var(--line-heading);
+}
+
+.manufacturing-process__timeline {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-4);
+  padding-top: 2.35rem;
+}
+
+.manufacturing-process__track {
+  position: absolute;
+  top: 1.6rem;
+  right: calc((100% / 6) / 2);
+  left: calc((100% / 6) / 2);
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(11, 140, 136, 0.18);
+}
+
+.manufacturing-process__track-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.process-step {
+  position: relative;
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.process-step__marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 3.2rem;
+  height: 3.2rem;
+  margin-inline: auto;
+  place-items: center;
+  border: 3px solid var(--color-white);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: var(--color-white);
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.process-step__body {
+  min-height: 12rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+}
+
+.process-step:hover .process-step__body,
+.process-step:focus-within .process-step__body {
+  border-color: rgba(11, 140, 136, 0.34);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-6px);
+}
+
+.process-step__title {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: var(--line-heading);
+}
+
+.process-step__description {
+  margin: var(--space-3) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  line-height: 1.65;
+}
+
+@media (max-width: 1199px) and (min-width: 700px) {
+  .manufacturing-process__timeline {
+    grid-template-columns: repeat(6, minmax(10rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+    scroll-snap-type: x proximity;
+  }
+
+  .process-step {
+    scroll-snap-align: start;
+  }
+
+  .manufacturing-process__track {
+    right: 5rem;
+    left: 5rem;
+    min-width: 50rem;
+  }
+}
+
+@media (max-width: 699px) {
+  .manufacturing-process {
+    padding: var(--space-12) 0;
+  }
+
+  .manufacturing-process__inner {
+    gap: var(--space-8);
+  }
+
+  .manufacturing-process__title {
+    font-size: var(--text-3xl);
+  }
+
+  .manufacturing-process__timeline {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    padding: 0 0 0 1.6rem;
+  }
+
+  .manufacturing-process__track {
+    top: 1.6rem;
+    bottom: 1.6rem;
+    left: 1.6rem;
+    width: 3px;
+    height: auto;
+  }
+
+  .manufacturing-process__track-fill {
+    transform: scaleY(0);
+    transform-origin: center top;
+  }
+
+  .process-step {
+    grid-template-columns: 3.2rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .process-step__marker {
+    margin-inline: 0;
+  }
+
+  .process-step__body {
+    min-height: 0;
+    padding: var(--space-5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .process-step__body {
+    transition: none;
+  }
+}

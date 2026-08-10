@@ -1,0 +1,148 @@
+.scroll-sequence {
+  --sequence-progress: 0%;
+
+  position: relative;
+  min-height: 520svh;
+  background: #050505;
+  color: var(--color-white);
+}
+
+.scroll-sequence__pin {
+  position: sticky;
+  top: 0;
+  display: grid;
+  height: 100svh;
+  overflow: hidden;
+  place-items: center;
+}
+
+.scroll-sequence__pin::before,
+.scroll-sequence__pin::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.scroll-sequence__pin::before {
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(148, 163, 184, 0.055) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.7), transparent 72%);
+  opacity: 0.46;
+}
+
+.scroll-sequence__pin::after {
+  background: radial-gradient(circle at 50% 72%, rgba(255, 122, 0, 0.08), transparent 31%);
+}
+
+.scroll-sequence__canvas {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(100vw, 1440px);
+  height: min(100svh, 880px);
+  opacity: 0;
+  transform: translateZ(0);
+  transition: opacity 280ms ease;
+}
+
+.scroll-sequence.is-sequence-loaded .scroll-sequence__canvas {
+  opacity: 1;
+}
+
+.scroll-sequence__loader {
+  position: absolute;
+  z-index: 2;
+  right: var(--container-gutter);
+  bottom: var(--space-8);
+  display: grid;
+  width: min(18rem, calc(100% - (var(--container-gutter) * 2)));
+  gap: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-md);
+  background: rgba(11, 18, 32, 0.78);
+  color: var(--color-white);
+  padding: var(--space-4);
+  box-shadow: 0 18px 42px rgba(2, 6, 23, 0.34);
+  backdrop-filter: blur(18px);
+  transition:
+    opacity var(--transition-base),
+    transform var(--transition-base),
+    visibility var(--transition-base);
+}
+
+.scroll-sequence.is-sequence-loaded .scroll-sequence__loader {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  visibility: hidden;
+}
+
+.scroll-sequence.is-sequence-error .scroll-sequence__loader {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+}
+
+.scroll-sequence__loader-copy,
+.scroll-sequence__loader-percent {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.scroll-sequence__loader-copy {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.scroll-sequence__loader-percent {
+  color: var(--color-white);
+}
+
+.scroll-sequence__loader-track {
+  position: relative;
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.scroll-sequence__loader-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--sequence-progress);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  transition: width 120ms linear;
+}
+
+@media (max-width: 767px) {
+  .scroll-sequence {
+    min-height: 460svh;
+  }
+
+  .scroll-sequence__canvas {
+    width: 100vw;
+    height: 78svh;
+  }
+
+  .scroll-sequence__loader {
+    right: 50%;
+    bottom: var(--space-5);
+    transform: translateX(50%);
+  }
+
+  .scroll-sequence.is-sequence-loaded .scroll-sequence__loader {
+    transform: translate(50%, 10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-sequence {
+    min-height: 100svh;
+  }
+}

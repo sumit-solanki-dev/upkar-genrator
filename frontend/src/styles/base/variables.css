@@ -1,0 +1,69 @@
+:root {
+  color-scheme: light;
+
+  --color-primary: #0b8c88;
+  --color-primary-dark: #075f5c;
+  --color-primary-soft: rgba(11, 140, 136, 0.1);
+  --color-accent: #ff7a00;
+  --color-accent-dark: #c95f00;
+  --color-accent-soft: rgba(255, 122, 0, 0.1);
+  --color-dark: #111827;
+  --color-dark-surface: #0b1220;
+  --color-white: #ffffff;
+  --color-ink: #17212b;
+  --color-muted: #5b6870;
+  --color-border: #dce4e7;
+  --color-surface: #f4f7f8;
+  --color-card: #ffffff;
+
+  --gradient-dark: linear-gradient(135deg, #0b1220 0%, #111827 100%);
+  --gradient-light: linear-gradient(180deg, #ffffff 0%, #f4f7f8 100%);
+  --gradient-card: linear-gradient(145deg, #ffffff, #f4f7f8);
+
+  --font-heading: "Poppins", "Inter", Arial, sans-serif;
+  --font-body: "Inter", Arial, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+
+  --line-tight: 1.15;
+  --line-heading: 1.25;
+  --line-body: 1.65;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 18px 42px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 28px 70px rgba(15, 23, 42, 0.14);
+  --shadow-glow-primary: 0 22px 54px rgba(11, 140, 136, 0.18);
+  --shadow-glow-accent: 0 20px 48px rgba(255, 122, 0, 0.22);
+
+  --container-width: 1180px;
+  --container-gutter: 1rem;
+  --header-height: 76px;
+  --transition-base: 180ms ease;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --container-gutter: 2rem;
+    --header-height: 84px;
+  }
+}
