@@ -59,6 +59,11 @@ function loadImage(src, priority = "auto") {
       image.fetchPriority = priority;
     }
     image.onload = () => {
+      if (!image.complete || image.naturalWidth === 0) {
+        resolve({ image: null, ok: false });
+        return;
+      }
+
       if (!image.decode) {
         resolve({ image, ok: true });
         return;
@@ -66,10 +71,16 @@ function loadImage(src, priority = "auto") {
 
       image
         .decode()
-        .catch(() => null)
-        .then(() => resolve({ image, ok: true }));
+        .then(() => resolve({ image, ok: true }))
+        .catch((err) => {
+          console.error("Failed to decode frame", src, err);
+          resolve({ image: null, ok: false });
+        });
     };
-    image.onerror = () => resolve({ image: null, ok: false });
+    image.onerror = () => {
+      console.error("Failed to load frame", src);
+      resolve({ image: null, ok: false });
+    };
     image.src = src;
   });
 }
@@ -139,8 +150,12 @@ function preloadImages({ frameOrder, frames, loadFrame }) {
   });
 }
 
+function isFrameValid(frame) {
+  return frame !== undefined && frame !== null && frame.complete && frame.naturalWidth > 0;
+}
+
 function getNearestFrame(frames, targetIndex) {
-  if (frames[targetIndex]) {
+  if (isFrameValid(frames[targetIndex])) {
     return frames[targetIndex];
   }
 
@@ -148,11 +163,11 @@ function getNearestFrame(frames, targetIndex) {
     const previous = frames[targetIndex - offset];
     const next = frames[targetIndex + offset];
 
-    if (previous) {
+    if (isFrameValid(previous)) {
       return previous;
     }
 
-    if (next) {
+    if (isFrameValid(next)) {
       return next;
     }
   }
@@ -161,17 +176,25 @@ function getNearestFrame(frames, targetIndex) {
 }
 
 function drawContain(context, image, canvasWidth, canvasHeight, fit) {
-  const scale =
-    fit === "cover"
-      ? Math.max(canvasWidth / image.naturalWidth, canvasHeight / image.naturalHeight)
-      : Math.min(canvasWidth / image.naturalWidth, canvasHeight / image.naturalHeight);
-  const width = image.naturalWidth * scale;
-  const height = image.naturalHeight * scale;
-  const x = (canvasWidth - width) / 2;
-  const y = (canvasHeight - height) / 2;
+  if (!image || !image.complete || image.naturalWidth === 0 || image.naturalHeight === 0) {
+    return;
+  }
 
-  context.clearRect(0, 0, canvasWidth, canvasHeight);
-  context.drawImage(image, x, y, width, height);
+  try {
+    const scale =
+      fit === "cover"
+        ? Math.max(canvasWidth / image.naturalWidth, canvasHeight / image.naturalHeight)
+        : Math.min(canvasWidth / image.naturalWidth, canvasHeight / image.naturalHeight);
+    const width = image.naturalWidth * scale;
+    const height = image.naturalHeight * scale;
+    const x = (canvasWidth - width) / 2;
+    const y = (canvasHeight - height) / 2;
+
+    context.clearRect(0, 0, canvasWidth, canvasHeight);
+    context.drawImage(image, x, y, width, height);
+  } catch (err) {
+    console.error("Canvas drawImage failed", err);
+  }
 }
 
 function updateLoader(section, completed, total) {
