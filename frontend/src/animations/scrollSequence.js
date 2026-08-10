@@ -1,7 +1,4 @@
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
 
 const PRELOAD_CONCURRENCY = 6;
 const MAX_DEVICE_PIXEL_RATIO = 2;
@@ -354,23 +351,32 @@ export function initScrollSequence() {
         return;
       }
 
-      ScrollTrigger.create({
-        trigger: section,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: true,
-        invalidateOnRefresh: true,
-        onUpdate: (self) => {
-          queueFrame(Math.round(self.progress * (frames.length - 1)));
-        },
-      });
+      let isTicking = false;
+
+      function onScroll() {
+        if (!isTicking) {
+          isTicking = true;
+          window.requestAnimationFrame(() => {
+            const rect = section.getBoundingClientRect();
+            const scrollDistance = rect.height - window.innerHeight;
+
+            if (scrollDistance > 0) {
+              let progress = -rect.top / scrollDistance;
+              progress = Math.max(0, Math.min(1, progress));
+              queueFrame(Math.round(progress * (frames.length - 1)));
+            }
+            isTicking = false;
+          });
+        }
+      }
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
 
       preloadImages({ frameOrder, frames, loadFrame }).then(() => {
         section.classList.add("is-sequence-ready");
-        ScrollTrigger.refresh();
       });
-      window.addEventListener("orientationchange", () => ScrollTrigger.refresh());
-      ScrollTrigger.refresh();
+      window.addEventListener("orientationchange", () => onScroll(), { passive: true });
     });
   }
 
