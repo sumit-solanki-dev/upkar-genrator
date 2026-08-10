@@ -19,23 +19,11 @@ export function createScrollSequenceSection(config = {}) {
   section.dataset.frameFit = settings.frameFit;
   section.innerHTML = `
     <div class="scroll-sequence__pin">
-      <canvas
-        class="scroll-sequence__canvas"
-        data-sequence-canvas
-        width="1920"
-        height="1080"
-        role="img"
-        aria-label="Animated industrial diesel generator sequence"
-      >
-        Animated industrial diesel generator sequence.
-      </canvas>
-
-      <!-- DEBUG MODE IMAGE -->
       <img
-        class="scroll-sequence__debug-img"
-        data-sequence-debug-img
-        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 9999; display: block;"
-        alt="Debug frame"
+        class="scroll-sequence__image"
+        data-sequence-image
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block;"
+        alt="Animated industrial diesel generator sequence"
       />
 
       <div class="scroll-sequence__loader" data-sequence-loader role="status" aria-live="polite">
