@@ -2,7 +2,7 @@ export const SCROLL_SEQUENCE_CONFIG = {
   frameCount: 216,
   frameStart: 1,
   framePad: 4,
-  framePath: "/images/sequence/frame_{frame}.jpg",
+  framePath: "/images/sequence/frame_{frame}.webp",
   frameFit: "contain",
 };
 

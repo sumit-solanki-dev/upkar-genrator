@@ -8,7 +8,7 @@ export function createCTASection() {
     <div class="cta-section__media" aria-hidden="true">
       <img
         class="cta-section__image"
-        src="/images/sequence/CTA-img.png"
+        src="/images/sequence/CTA-img.webp"
         alt=""
         width="1448"
         height="1086"

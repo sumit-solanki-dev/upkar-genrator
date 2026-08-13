@@ -12,7 +12,7 @@ function readSequenceConfig(section) {
     frameCount: Number(section.dataset.frameCount || 216),
     frameStart: Number(section.dataset.frameStart || 1),
     framePad:   Number(section.dataset.framePad   || 4),
-    framePath:  section.dataset.framePath || "/images/sequence/frame_{frame}.jpg",
+    framePath:  section.dataset.framePath || "/images/sequence/frame_{frame}.webp",
   };
 }
 
