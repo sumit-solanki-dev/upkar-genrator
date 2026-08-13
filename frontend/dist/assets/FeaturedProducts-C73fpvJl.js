@@ -44,10 +44,11 @@ async function d(){let a=[];try{a=(await(await fetch("/products.json")).json()).
             `).join("")}
         </div>
 
+        <button class="featured-products__nav featured-products__nav--prev swiper-button-prev" type="button" aria-label="Previous product"></button>
+        <button class="featured-products__nav featured-products__nav--next swiper-button-next" type="button" aria-label="Next product"></button>
+        
         <div class="featured-products__controls" aria-label="Featured products carousel controls">
-          <button class="featured-products__nav featured-products__nav--prev swiper-button-prev" type="button" aria-label="Previous product"></button>
           <div class="featured-products__pagination swiper-pagination"></div>
-          <button class="featured-products__nav featured-products__nav--next swiper-button-next" type="button" aria-label="Next product"></button>
         </div>
       </div>
     </div>

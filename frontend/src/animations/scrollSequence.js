@@ -137,19 +137,27 @@ function initImageSequence(section, sequenceImg, sequenceCanvas, config) {
           resolve(null);
           return;
         }
-        cache.set(index, img);
         
-        if (!state.started) {
-          state.loadedCount++;
-          updateLoader(section, Math.min(100, Math.round((state.loadedCount / state.initialLoadTarget) * 100)));
-        }
+        // Decode image off the main thread before drawing to prevent GPU upload stutter
+        img.decode().then(() => {
+          cache.set(index, img);
+          
+          if (!state.started) {
+            state.loadedCount++;
+            updateLoader(section, Math.min(100, Math.round((state.loadedCount / state.initialLoadTarget) * 100)));
+          }
 
-        renderTargetFrame();
-        resolve(img);
+          renderTargetFrame();
+          resolve(img);
+        }).catch(() => {
+          // Fallback if decode() fails or is unsupported
+          cache.set(index, img);
+          renderTargetFrame();
+          resolve(img);
+        });
       };
 
       img.onerror = () => resolve(null);
-      console.trace("JPEG FRAME REQUEST SOURCE", frameSrcs[index]);
       img.src = frameSrcs[index];
     }).finally(() => {
       activeRequests.delete(index);
@@ -165,7 +173,6 @@ function initImageSequence(section, sequenceImg, sequenceCanvas, config) {
       return;
     }
     loadQueue.add(index);
-    processLoadQueue();
   }
 
   function processLoadQueue() {
@@ -231,13 +238,14 @@ function initImageSequence(section, sequenceImg, sequenceCanvas, config) {
   }
 
   function evictOldFrames(targetIndex) {
-    const RADIUS = 30;
+    const RADIUS = 75; // ~150 frames max in memory (~1.2GB max).
     for (const [key] of cache) {
       if (key === state.currentFrameIndex) continue;
       if (key === state.targetFrameIndex) continue;
       if (activeRequests.has(key)) continue;
       if (Math.abs(key - targetIndex) > RADIUS) {
         cache.delete(key);
+        loadQueue.add(key); // Re-queue it to load again if we scroll back
       }
     }
   }
@@ -245,23 +253,10 @@ function initImageSequence(section, sequenceImg, sequenceCanvas, config) {
   function queueFrameUpdates(targetIndex) {
     state.targetFrameIndex = Math.max(0, Math.min(totalFrames - 1, targetIndex));
     
-    for (const idx of loadQueue) {
-      if (Math.abs(idx - state.targetFrameIndex) > PRELOAD_AHEAD + PRELOAD_BEHIND) {
-        loadQueue.delete(idx);
-      }
-    }
-
-    queueFrameLoad(state.targetFrameIndex);
-
-    const dir = state.targetFrameIndex >= state.currentFrameIndex ? 1 : -1;
-    
-    for (let i = 1; i <= PRELOAD_AHEAD; i++) {
-      queueFrameLoad(state.targetFrameIndex + (i * dir));
-    }
-    
-    for (let i = 1; i <= PRELOAD_BEHIND; i++) {
-      queueFrameLoad(state.targetFrameIndex - (i * dir));
-    }
+    // We don't need to add to loadQueue here because ALL frames are added at init 
+    // and evicted frames are automatically re-added. We just poke processLoadQueue
+    // so it prioritizes downloading frames near the new target.
+    processLoadQueue();
 
     renderTargetFrame();
   }
@@ -295,9 +290,11 @@ function initImageSequence(section, sequenceImg, sequenceCanvas, config) {
 
   updateLoader(section, 0);
   
-  for (let i = 0; i < state.initialLoadTarget; i++) {
-    queueFrameLoad(i);
+  // Fill the queue with all frames initially
+  for (let i = 0; i < totalFrames; i++) {
+    loadQueue.add(i);
   }
+  processLoadQueue();
 
   const firstFrameReq = loadFrame(0);
   if (firstFrameReq) {
