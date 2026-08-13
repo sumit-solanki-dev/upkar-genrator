@@ -61,7 +61,6 @@ async function createHomePage() {
     { createCompanyStatsSection },
     { createIndustriesWeServeSection },
     { createManufacturingProcessSection },
-    { createTestimonialsSection },
     { createCTASection },
     { createFeaturedProductsSection },
   ] = await Promise.all([
@@ -70,7 +69,6 @@ async function createHomePage() {
     import("./components/sections/CompanyStats.js"),
     import("./components/sections/IndustriesWeServe.js"),
     import("./components/sections/ManufacturingProcess.js"),
-    import("./components/sections/Testimonials.js"),
     import("./components/sections/CTA.js"),
     import("./components/sections/FeaturedProducts.js"),
   ]);
@@ -89,7 +87,6 @@ async function createHomePage() {
       createCompanyStatsSection(),
       createIndustriesWeServeSection(),
       createManufacturingProcessSection(),
-      createTestimonialsSection(),
       createCTASection(),
       await createFeaturedProductsSection(),
     ],
@@ -159,24 +156,6 @@ function initHomeEnhancements() {
     initIndustriesAnimations();
     initManufacturingProcessAnimations();
     initSwipers("[data-featured-products-slider]");
-    initSwipers("[data-testimonials-slider]", {
-      loop: !prefersReducedMotion(),
-      autoplay: prefersReducedMotion()
-        ? false
-        : {
-            delay: 3200,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-          },
-      breakpoints: {
-        700: {
-          slidesPerView: 2,
-        },
-        1100: {
-          slidesPerView: 3,
-        },
-      },
-    });
   });
 }
 
@@ -204,3 +183,59 @@ async function initializeApp() {
 }
 
 initializeApp();
+
+// --- DIAGNOSTIC INJECTION START ---
+function runDiagnostics() {
+  setTimeout(() => {
+    const viewportWidth = document.documentElement.clientWidth;
+
+    const overflowingElements = [...document.querySelectorAll("*")]
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+
+        return {
+          element,
+          left: rect.left,
+          right: rect.right,
+          width: rect.width,
+          overflowRight: rect.right - viewportWidth,
+          overflowLeft: -rect.left,
+        };
+      })
+      .filter(
+        (item) =>
+          item.right > viewportWidth + 1 ||
+          item.left < -1
+      );
+
+    console.log("HORIZONTAL OVERFLOW TEST", {
+      innerWidth: window.innerWidth,
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      overflowAmount:
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+    });
+
+    const worstRightOverflow = overflowingElements
+      .sort((a, b) => b.right - a.right)[0];
+
+    if (worstRightOverflow) {
+      console.log("WORST HORIZONTAL OVERFLOW ELEMENT", {
+        tag: worstRightOverflow.element.tagName,
+        className:
+          typeof worstRightOverflow.element.className === "string"
+            ? worstRightOverflow.element.className
+            : "",
+        id: worstRightOverflow.element.id,
+        left: worstRightOverflow.left,
+        right: worstRightOverflow.right,
+        width: worstRightOverflow.width,
+        overflowRight: worstRightOverflow.overflowRight,
+      });
+    }
+  }, 2000);
+}
+
+runWhenIdle(runDiagnostics);
+// --- DIAGNOSTIC INJECTION END ---

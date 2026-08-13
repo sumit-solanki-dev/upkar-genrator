@@ -8,6 +8,8 @@ html {
   min-width: 320px;
   background: var(--color-surface);
   scroll-behavior: auto;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 html.lenis,
@@ -26,6 +28,8 @@ html.lenis body {
 body {
   min-height: 100vh;
   margin: 0;
+  width: 100%;
+  max-width: 100%;
   background:
     radial-gradient(circle at 10% 0%, rgba(11, 140, 136, 0.045), transparent 24rem),
     linear-gradient(180deg, var(--color-surface) 0%, var(--color-white) 38rem);
@@ -33,7 +37,8 @@ body {
   font-family: var(--font-body);
   font-size: var(--text-md);
   line-height: var(--line-body);
-  overflow-x: clip;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }

@@ -24,9 +24,11 @@ export function initIndustriesAnimations() {
 
   gsap.set([heading, cards], { autoAlpha: 0, y: 24 });
 
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
   ScrollTrigger.create({
     trigger: section,
-    start: "top 76%",
+    start: isAndroid ? "top 95%" : "top 76%",
     once: true,
     onEnter: () => {
       gsap

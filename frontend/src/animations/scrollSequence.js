@@ -1,4 +1,7 @@
-const SEQUENCE_ROOT_MARGIN = "650px 0px";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -8,46 +11,327 @@ function readSequenceConfig(section) {
   return {
     frameCount: Number(section.dataset.frameCount || 216),
     frameStart: Number(section.dataset.frameStart || 1),
-    framePad: Number(section.dataset.framePad || 4),
-    framePath: section.dataset.framePath || "/images/sequence/frame_{frame}.jpg",
+    framePad:   Number(section.dataset.framePad   || 4),
+    framePath:  section.dataset.framePath || "/images/sequence/frame_{frame}.jpg",
   };
 }
 
 function getFrameSource(config, frameNumber) {
-  const paddedFrame = String(frameNumber).padStart(config.framePad, "0");
+  const padded = String(frameNumber).padStart(config.framePad, "0");
   return config.framePath
-    .replaceAll("{frame}", paddedFrame)
+    .replaceAll("{frame}", padded)
     .replaceAll("{index}", String(frameNumber));
 }
 
 function updateLoader(section, progress) {
-  const progressText = section.querySelector("[data-sequence-progress]");
-  const progressBar = section.querySelector("[data-sequence-bar]");
-
+  const text = section.querySelector("[data-sequence-progress]");
+  const bar  = section.querySelector("[data-sequence-bar]");
   section.style.setProperty("--sequence-progress", progress + "%");
-
-  if (progressText) {
-    progressText.textContent = progress + "%";
-  }
-
-  if (progressBar) {
-    progressBar.style.width = progress + "%";
-  }
+  if (text) text.textContent = progress + "%";
+  if (bar)  bar.style.width  = progress + "%";
 }
 
 function showUnavailableState(section) {
   const loader = section.querySelector("[data-sequence-loader]");
-  const progressText = section.querySelector("[data-sequence-progress]");
-
+  const text   = section.querySelector("[data-sequence-progress]");
   section.classList.add("is-sequence-error");
+  if (loader) loader.setAttribute("role", "alert");
+  if (text)   text.textContent = "Frames unavailable";
+}
 
+function initAndroidStaticSequence(section, sequenceImg, config) {
+  section.classList.add("is-sequence-loaded");
+  section.classList.add("is-sequence-ready");
+
+  // Adjust structural CSS inline so the image section scrolls naturally 
+  // without the 520svh scroll gap or CSS sticky pinning.
+  section.style.minHeight = "auto";
+  
+  const pinEl = section.querySelector(".scroll-sequence__pin");
+  if (pinEl) {
+    pinEl.style.position = "relative";
+    pinEl.style.height = "auto";
+    pinEl.style.top = "auto";
+    pinEl.style.display = "flex";
+    pinEl.style.flexDirection = "column";
+    pinEl.style.gap = "0";
+    pinEl.style.padding = "0";
+
+    // Hide original DOM elements
+    sequenceImg.style.display = "none";
+    const canvas = section.querySelector("[data-sequence-canvas]");
+    if (canvas) canvas.style.display = "none";
+
+    // Inject 3 keyframes to fill the vertical space (middle is empty placeholder)
+    const frameIndices = [config.frameStart, null, config.frameCount];
+
+    frameIndices.forEach((frameIdx) => {
+      if (frameIdx === null) {
+        // Empty space placeholder
+        const placeholder = document.createElement("div");
+        placeholder.style.width = "100%";
+        placeholder.style.aspectRatio = "16 / 9";
+        placeholder.style.display = "block";
+        pinEl.appendChild(placeholder);
+        return;
+      }
+
+      const img = new Image();
+      img.src = getFrameSource(config, frameIdx);
+      img.style.position = "relative";
+      img.style.zIndex = "1";
+      img.style.width = "100%";
+      img.style.height = "auto";
+      img.style.objectFit = "contain";
+      img.style.display = "block";
+      pinEl.appendChild(img);
+    });
+  }
+
+  // Remove the loader UI completely
+  const loader = section.querySelector(".scroll-sequence__loader");
   if (loader) {
-    loader.setAttribute("role", "alert");
+    loader.remove();
   }
 
-  if (progressText) {
-    progressText.textContent = "Frames unavailable";
+  return section;
+}
+
+function initImageSequence(section, sequenceImg, sequenceCanvas, config) {
+  // ORIGINAL JPEG SEQUENCE LOGIC MIGRATED TO CANVAS
+  const ctx = sequenceCanvas ? sequenceCanvas.getContext("2d", { alpha: false }) : null;
+  const totalFrames = config.frameCount;
+  const frameSrcs = Array.from({ length: totalFrames }, (_, i) =>
+    getFrameSource(config, config.frameStart + i)
+  );
+
+  const state = {
+    started: false,
+    currentFrameIndex: -1,
+    targetFrameIndex: 0,
+    loadedCount: 0,
+    initialLoadTarget: 5,
+  };
+
+  const cache = new Map();
+  const activeRequests = new Map();
+  const PRELOAD_AHEAD = 8;
+  const PRELOAD_BEHIND = 2;
+  const CONCURRENCY_LIMIT = 4;
+
+  const loadQueue = new Set();
+
+  function loadFrame(index) {
+    if (cache.has(index)) return Promise.resolve(cache.get(index));
+    if (activeRequests.has(index)) return activeRequests.get(index);
+
+    if (activeRequests.size >= CONCURRENCY_LIMIT) {
+      return Promise.resolve(null);
+    }
+
+    const req = new Promise((resolve) => {
+      const img = new Image();
+
+      img.onload = () => {
+        if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+          resolve(null);
+          return;
+        }
+        cache.set(index, img);
+        
+        if (!state.started) {
+          state.loadedCount++;
+          updateLoader(section, Math.min(100, Math.round((state.loadedCount / state.initialLoadTarget) * 100)));
+        }
+
+        renderTargetFrame();
+        resolve(img);
+      };
+
+      img.onerror = () => resolve(null);
+      console.trace("JPEG FRAME REQUEST SOURCE", frameSrcs[index]);
+      img.src = frameSrcs[index];
+    }).finally(() => {
+      activeRequests.delete(index);
+      processLoadQueue();
+    });
+
+    activeRequests.set(index, req);
+    return req;
   }
+
+  function queueFrameLoad(index) {
+    if (index < 0 || index >= totalFrames || cache.has(index) || activeRequests.has(index)) {
+      return;
+    }
+    loadQueue.add(index);
+    processLoadQueue();
+  }
+
+  function processLoadQueue() {
+    if (activeRequests.size >= CONCURRENCY_LIMIT) return;
+    if (loadQueue.size === 0) return;
+
+    let toLoad = null;
+
+    if (loadQueue.has(state.targetFrameIndex)) {
+      toLoad = state.targetFrameIndex;
+    } else {
+      let minDistance = Infinity;
+      for (const idx of loadQueue) {
+        const dist = Math.abs(idx - state.targetFrameIndex);
+        if (dist < minDistance) {
+          minDistance = dist;
+          toLoad = idx;
+        }
+      }
+    }
+
+    if (toLoad !== null) {
+      loadQueue.delete(toLoad);
+      loadFrame(toLoad);
+      processLoadQueue();
+    }
+  }
+
+  function renderTargetFrame() {
+    const target = state.targetFrameIndex;
+    evictOldFrames(target);
+
+    const exact = cache.get(target);
+    if (exact && exact.complete && exact.naturalWidth > 0) {
+      if (state.currentFrameIndex !== target) {
+        state.currentFrameIndex = target;
+        if (ctx) {
+          ctx.drawImage(exact, 0, 0);
+        } else {
+          sequenceImg.src = exact.src;
+        }
+      }
+      return;
+    }
+
+    let bestKey = -1;
+    let bestDist = Infinity;
+    for (const [key, img] of cache) {
+      if (!img.complete || img.naturalWidth === 0) continue;
+      const d = Math.abs(key - target);
+      if (d < bestDist) { bestDist = d; bestKey = key; }
+    }
+
+    if (bestKey !== -1 && state.currentFrameIndex !== bestKey) {
+      state.currentFrameIndex = bestKey;
+      const fallbackImg = cache.get(bestKey);
+      if (ctx) {
+        ctx.drawImage(fallbackImg, 0, 0);
+      } else {
+        sequenceImg.src = fallbackImg.src;
+      }
+    }
+  }
+
+  function evictOldFrames(targetIndex) {
+    const RADIUS = 30;
+    for (const [key] of cache) {
+      if (key === state.currentFrameIndex) continue;
+      if (key === state.targetFrameIndex) continue;
+      if (activeRequests.has(key)) continue;
+      if (Math.abs(key - targetIndex) > RADIUS) {
+        cache.delete(key);
+      }
+    }
+  }
+
+  function queueFrameUpdates(targetIndex) {
+    state.targetFrameIndex = Math.max(0, Math.min(totalFrames - 1, targetIndex));
+    
+    for (const idx of loadQueue) {
+      if (Math.abs(idx - state.targetFrameIndex) > PRELOAD_AHEAD + PRELOAD_BEHIND) {
+        loadQueue.delete(idx);
+      }
+    }
+
+    queueFrameLoad(state.targetFrameIndex);
+
+    const dir = state.targetFrameIndex >= state.currentFrameIndex ? 1 : -1;
+    
+    for (let i = 1; i <= PRELOAD_AHEAD; i++) {
+      queueFrameLoad(state.targetFrameIndex + (i * dir));
+    }
+    
+    for (let i = 1; i <= PRELOAD_BEHIND; i++) {
+      queueFrameLoad(state.targetFrameIndex - (i * dir));
+    }
+
+    renderTargetFrame();
+  }
+
+  function initGSAPScroll() {
+    const pinEl = section.querySelector(".scroll-sequence__pin");
+    
+    ScrollTrigger.create({
+      trigger: section,
+      start: "top top",
+      end: "bottom bottom",
+      pin: pinEl,
+      scrub: true,
+      onUpdate: (self) => {
+        const frameIndex = Math.round(self.progress * (totalFrames - 1));
+        queueFrameUpdates(frameIndex);
+      },
+    });
+
+    let resizeTimer = null;
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 250);
+    };
+
+    window.addEventListener("resize", onResize, { passive: true });
+    window.addEventListener("orientationchange", onResize, { passive: true });
+  }
+
+  updateLoader(section, 0);
+  
+  for (let i = 0; i < state.initialLoadTarget; i++) {
+    queueFrameLoad(i);
+  }
+
+  const firstFrameReq = loadFrame(0);
+  if (firstFrameReq) {
+    firstFrameReq.then((firstImage) => {
+      if (!firstImage) {
+        showUnavailableState(section);
+        return;
+      }
+
+      state.started = true;
+      state.currentFrameIndex = 0;
+      
+      if (sequenceCanvas && ctx) {
+        sequenceCanvas.width = firstImage.naturalWidth;
+        sequenceCanvas.height = firstImage.naturalHeight;
+        ctx.drawImage(firstImage, 0, 0);
+        sequenceCanvas.style.display = "block";
+        sequenceImg.style.display = "none";
+      } else {
+        sequenceImg.src = firstImage.src;
+      }
+      
+      section.classList.add("is-sequence-loaded");
+      section.classList.add("is-sequence-ready");
+
+      if (prefersReducedMotion()) return;
+
+      initGSAPScroll();
+    });
+  } else {
+    showUnavailableState(section);
+  }
+
+  return section;
 }
 
 export function initScrollSequence() {
@@ -55,239 +339,28 @@ export function initScrollSequence() {
   if (!section) return null;
 
   const sequenceImg = section.querySelector("[data-sequence-image]");
+  const sequenceCanvas = section.querySelector("[data-sequence-canvas]");
   if (!sequenceImg) return null;
 
   const config = readSequenceConfig(section);
-  const totalFrames = config.frameCount;
-  
-  // Create an array of all frame URLs
-  const frameSources = Array.from({ length: totalFrames }, (_, index) => {
-    return getFrameSource(config, config.frameStart + index);
+
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
+  console.log("DEVICE / SEQUENCE MODE", {
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    maxTouchPoints: navigator.maxTouchPoints,
+    isAndroid: /Android/i.test(navigator.userAgent)
   });
 
-  // State
-  const state = {
-    started: false,
-    currentFrameIndex: 0,
-    targetFrameIndex: 0,
-    rafId: 0,
-    loadedCount: 0
-  };
+  console.log(
+    "SELECTED SEQUENCE RENDERER:",
+    isAndroid ? "ANDROID STATIC IMAGE" : "JPEG IMAGE SEQUENCE"
+  );
 
-  // Cache caches decoded src strings for immediate application
-  const cache = new Map(); // index -> src
-  const activeRequests = new Map(); // index -> Promise
-
-  // Evict frames that are far from the target index to prevent memory OOM on mobile
-  function evictOldFrames(targetIndex) {
-    const WINDOW = 25; // Keep max 50 frames in memory
-    for (const key of cache.keys()) {
-      if (Math.abs(key - targetIndex) > WINDOW) {
-        cache.delete(key);
-      }
-    }
+  if (isAndroid) {
+    return initAndroidStaticSequence(section, sequenceImg, config);
   }
 
-  function loadFrame(index) {
-    if (cache.has(index)) {
-      return Promise.resolve(cache.get(index));
-    }
-
-    if (activeRequests.has(index)) {
-      return activeRequests.get(index);
-    }
-
-    const src = frameSources[index];
-    const req = new Promise((resolve) => {
-      const img = new Image();
-      img.decoding = "async";
-      
-      img.onload = () => {
-        if (!img.complete || img.naturalWidth === 0) {
-          resolve(null);
-          return;
-        }
-        
-        cache.set(index, src);
-        
-        // Initial loader progress
-        if (!state.started) {
-          state.loadedCount++;
-          updateLoader(section, Math.min(100, Math.round((state.loadedCount / 5) * 100)));
-        }
-        
-        resolve(src);
-      };
-      
-      img.onerror = () => {
-        resolve(null);
-      };
-      
-      img.src = src;
-    }).finally(() => {
-      activeRequests.delete(index);
-    });
-
-    activeRequests.set(index, req);
-    return req;
-  }
-
-  function renderTargetFrame() {
-    const target = state.targetFrameIndex;
-    
-    // Evict faraway frames from cache
-    evictOldFrames(target);
-
-    // Only update the actual image if the frame is fully loaded and ready in our cache.
-    // This strictly prevents "black frames".
-    if (cache.has(target)) {
-      state.currentFrameIndex = target;
-      sequenceImg.src = cache.get(target);
-    }
-  }
-
-  function queueFrameUpdate(targetIndex) {
-    state.targetFrameIndex = Math.max(0, Math.min(totalFrames - 1, targetIndex));
-    
-    // 1. Proactively load the target frame immediately
-    loadFrame(state.targetFrameIndex).then((src) => {
-      if (src && !state.rafId) {
-        state.rafId = window.requestAnimationFrame(() => {
-          state.rafId = 0;
-          renderTargetFrame();
-        });
-      }
-    });
-
-    // 2. Preload upcoming frames in the direction of scrolling
-    const direction = state.targetFrameIndex >= state.currentFrameIndex ? 1 : -1;
-    const preloadAhead = 4;
-    
-    for (let i = 1; i <= preloadAhead; i++) {
-      const aheadIndex = state.targetFrameIndex + (i * direction);
-      if (aheadIndex >= 0 && aheadIndex < totalFrames) {
-        // We just kick off the load without awaiting it
-        loadFrame(aheadIndex);
-      }
-    }
-    
-    // Schedule render
-    if (!state.rafId) {
-      state.rafId = window.requestAnimationFrame(() => {
-        state.rafId = 0;
-        renderTargetFrame();
-      });
-    }
-  }
-
-  function startSequence() {
-    if (state.started) return;
-    
-    updateLoader(section, 0);
-
-    // Initial preload: aggressively load the first frame and a few nearby frames
-    const initialLoads = [0, 1, 2, 3, 4].map(idx => loadFrame(idx));
-    
-    // We only wait for the very first frame to safely display it.
-    loadFrame(0).then((firstSrc) => {
-      if (!firstSrc) {
-        showUnavailableState(section);
-        return;
-      }
-
-      state.started = true;
-      state.currentFrameIndex = 0;
-      sequenceImg.src = firstSrc;
-      
-      section.classList.add("is-sequence-loaded");
-      section.classList.add("is-sequence-ready");
-
-      if (prefersReducedMotion()) return;
-
-      let isTicking = false;
-      let lastDiagLog = 0;
-
-      function onScroll() {
-        if (!isTicking) {
-          isTicking = true;
-          window.requestAnimationFrame(() => {
-            const rect = section.getBoundingClientRect();
-            const scrollDistance = rect.height - window.innerHeight;
-            
-            let progress = scrollDistance > 0 ? -rect.top / scrollDistance : null;
-
-            const now = Date.now();
-            if (now - lastDiagLog > 200) {
-              console.log("--- SEQUENCE DIAGNOSTIC ---", {
-                  scrollY: window.scrollY,
-                  viewportHeight: window.innerHeight,
-                  rectTop: rect.top,
-                  rectHeight: rect.height,
-                  rectBottom: rect.bottom,
-                  scrollDistance,
-                  progress,
-                  scrollTop: document.documentElement.scrollTop,
-                  scrollHeight: document.documentElement.scrollHeight,
-                  offsetHeight: section.offsetHeight,
-                  sectionScrollHeight: section.scrollHeight,
-                  position: window.getComputedStyle(section).position,
-                  overflow: window.getComputedStyle(section).overflow,
-                  computedHeight: window.getComputedStyle(section).height,
-                  visualViewportHeight: window.visualViewport?.height
-              });
-
-              let parent = section.parentElement;
-              while (parent && parent !== document.documentElement) {
-                const style = window.getComputedStyle(parent);
-                if (style.overflow !== "visible" || style.position === "fixed" || style.position === "sticky" || style.transform !== "none" || style.contain !== "none") {
-                   console.log("RESTRICTIVE PARENT FOUND", {
-                     tag: parent.tagName,
-                     className: parent.className,
-                     overflow: style.overflow,
-                     position: style.position,
-                     transform: style.transform,
-                     height: style.height,
-                     contain: style.contain
-                   });
-                }
-                parent = parent.parentElement;
-              }
-
-              lastDiagLog = now;
-            }
-
-            if (scrollDistance > 0) {
-              progress = Math.max(0, Math.min(1, progress));
-              queueFrameUpdate(Math.round(progress * (totalFrames - 1)));
-            }
-            
-            isTicking = false;
-          });
-        }
-      }
-
-      window.addEventListener("scroll", onScroll, { passive: true });
-      window.addEventListener("orientationchange", () => onScroll(), { passive: true });
-      window.addEventListener("resize", () => onScroll(), { passive: true });
-      
-      onScroll();
-    });
-  }
-
-  if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          observer.disconnect();
-          startSequence();
-        }
-      },
-      { rootMargin: SEQUENCE_ROOT_MARGIN }
-    );
-    observer.observe(section);
-  } else {
-    startSequence();
-  }
-
-  return section;
+  return initImageSequence(section, sequenceImg, sequenceCanvas, config);
 }

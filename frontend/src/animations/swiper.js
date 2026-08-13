@@ -46,6 +46,7 @@ export function initSwipers(selector = ".js-swiper", options = {}) {
       },
     };
 
+
     return new Swiper(element, {
       ...baseOptions,
       ...options,

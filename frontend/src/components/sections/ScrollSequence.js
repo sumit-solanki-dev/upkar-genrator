@@ -25,6 +25,12 @@ export function createScrollSequenceSection(config = {}) {
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block;"
         alt="Animated industrial diesel generator sequence"
       />
+      <canvas
+        class="scroll-sequence__canvas"
+        data-sequence-canvas
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"
+        aria-hidden="true"
+      ></canvas>
 
       <div class="scroll-sequence__loader" data-sequence-loader role="status" aria-live="polite">
         <span class="scroll-sequence__loader-copy">Loading frames</span>

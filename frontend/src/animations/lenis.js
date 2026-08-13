@@ -13,6 +13,12 @@ export function initLenis() {
     return null;
   }
 
+  const isAndroidTouch = navigator.maxTouchPoints > 0 && /android/i.test(navigator.userAgent);
+  
+  if (isAndroidTouch) {
+    return null;
+  }
+
   const lenis = new Lenis({
     duration: 1.05,
     easing: (time) => Math.min(1, 1.001 - Math.pow(2, -10 * time)),

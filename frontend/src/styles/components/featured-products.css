@@ -1,6 +1,7 @@
 .featured-products {
   position: relative;
   overflow: hidden;
+  clip-path: inset(0);
   background: var(--gradient-light);
   padding: var(--space-16) 0;
 }
@@ -47,7 +48,9 @@
 }
 
 .featured-products__swiper {
-  overflow: visible;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   padding: 0.25rem 0 var(--space-12);
 }
 

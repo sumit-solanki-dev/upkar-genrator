@@ -34,9 +34,11 @@ export function initCompanyStatsAnimations() {
     return section;
   }
 
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
   ScrollTrigger.create({
     trigger: section,
-    start: "top 78%",
+    start: isAndroid ? "top 95%" : "top 78%",
     once: true,
     onEnter: () => {
       gsap.fromTo(

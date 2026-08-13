@@ -19,6 +19,15 @@ export function initNavbarAnimations() {
     return null;
   }
 
+  if (window.innerWidth < NAV_DESKTOP_MIN_WIDTH) {
+    gsap
+      .timeline({ defaults: { duration: 0.7, ease: "power3.out" } })
+      .from(header, { autoAlpha: 0, y: -22, clearProps: "opacity,visibility,transform" })
+      .from(".brand__mark", { autoAlpha: 0, scale: 0.86, clearProps: "opacity,visibility,transform" }, "-=0.4")
+      .from(".brand__text", { autoAlpha: 0, x: -12, clearProps: "opacity,visibility,transform" }, "-=0.36");
+    return menu;
+  }
+
   gsap
     .timeline({ defaults: { duration: 0.7, ease: "power3.out" } })
     .from(header, { autoAlpha: 0, y: -22, clearProps: "opacity,visibility,transform" })
@@ -30,49 +39,9 @@ export function initNavbarAnimations() {
     return header;
   }
 
-  menu.addEventListener("navbar:toggle", (event) => {
-    if (window.innerWidth >= NAV_DESKTOP_MIN_WIDTH) {
-      return;
-    }
-
-    gsap.killTweensOf([menu, menuItems]);
-
-    if (event.detail.isOpen) {
-      gsap
-        .timeline({ defaults: { ease: "power3.out" } })
-        .fromTo(
-          menu,
-          { autoAlpha: 0, x: 42, scale: 0.98 },
-          { autoAlpha: 1, x: 0, scale: 1, duration: 0.44 },
-        )
-        .fromTo(
-          menuItems,
-          { autoAlpha: 0, y: 14 },
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.34,
-            stagger: 0.045,
-            clearProps: "opacity,visibility,transform",
-          },
-          "-=0.18",
-        );
-      return;
-    }
-
-    event.preventDefault();
-
-    gsap
-      .timeline({
-        defaults: { ease: "power2.inOut" },
-        onComplete: () => {
-          event.detail.complete?.();
-          gsap.set([menu, menuItems], { clearProps: "opacity,visibility,transform" });
-        },
-      })
-      .to(menuItems, { autoAlpha: 0, y: 8, duration: 0.18, stagger: { each: 0.025, from: "end" } })
-      .to(menu, { autoAlpha: 0, x: 34, scale: 0.98, duration: 0.24 }, "-=0.08");
-  });
+  // Rely on pure CSS transitions for mobile menu toggle
+  // This prevents severe mobile GPU rendering bugs on Safari/Chrome
+  // where backdrop-filter + child transforms cause invisible text.
 
   return menu;
 }

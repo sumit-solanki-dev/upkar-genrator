@@ -20,9 +20,11 @@ function animateProcess(section, isMobile) {
     transformOrigin: isMobile ? "center top" : "left center",
   });
 
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
   ScrollTrigger.create({
     trigger: section,
-    start: "top 74%",
+    start: isAndroid ? "top 95%" : "top 74%",
     once: true,
     onEnter: () => {
       gsap
