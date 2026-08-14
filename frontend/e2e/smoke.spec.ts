@@ -473,7 +473,7 @@ test("mobile sequence scrubs one packed video without requesting frame files", a
   const requestedVideos: string[] = [];
   const requestedFrames: string[] = [];
   page.on("request", (request) => {
-    if (request.url().includes("/generator-sequence-v4/generator-scroll.mp4")) {
+    if (request.url().includes("/generator-sequence-v4/generator-scroll-compressed.mp4")) {
       requestedVideos.push(request.url());
     }
     if (/generator-sequence-v[23].*\/frame_\d+\.webp/.test(request.url())) {
@@ -570,7 +570,7 @@ test("reverse scrolling reuses the packed video without another media request", 
   let videoRequests = 0;
   let frameRequests = 0;
   page.on("request", (request) => {
-    if (request.url().includes("/generator-sequence-v4/generator-scroll.mp4")) {
+    if (request.url().includes("/generator-sequence-v4/generator-scroll-compressed.mp4")) {
       videoRequests += 1;
     }
     if (/generator-sequence-v[23].*\/frame_\d+\.webp/.test(request.url())) {
@@ -672,7 +672,7 @@ test("reduced motion keeps the sequence static and requests no frames", async ({
   page.on("request", (request) => {
     if (
       /generator-sequence-v[23].*\/frame_\d+\.webp/.test(request.url()) ||
-      request.url().includes("/generator-sequence-v4/generator-scroll.mp4")
+      request.url().includes("/generator-sequence-v4/generator-scroll-compressed.mp4")
     ) {
       requestedAnimationAssets.push(request.url());
     }

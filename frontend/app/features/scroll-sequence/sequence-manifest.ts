@@ -17,7 +17,7 @@ export const generatorSequenceManifest: SequenceManifest = {
     alt: "UPKAR enclosed industrial diesel generator",
   },
   video: {
-    src: publicAsset("images/generator-sequence-v4/generator-scroll.mp4"),
+    src: publicAsset("images/generator-sequence-v4/generator-scroll-compressed.mp4"),
     type: "video/mp4",
     codec: "avc1.640028",
     width: 1280,

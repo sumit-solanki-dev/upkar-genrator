@@ -79,7 +79,7 @@ describe("packed scroll sequence", () => {
   it("keeps all 192 samples in a fast-start H.264 file near two megabytes", () => {
     const videoPath = join(
       process.cwd(),
-      "public/images/generator-sequence-v4/generator-scroll.mp4",
+      "public/images/generator-sequence-v4/generator-scroll-compressed.mp4",
     );
     const contents = readFileSync(videoPath);
     const moovOffset = contents.indexOf("moov");

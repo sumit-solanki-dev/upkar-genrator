@@ -14,7 +14,7 @@ describe("ScrollSequence server rendering", () => {
     expect(markup).toContain("data-sequence-renderable=\"false\"");
     expect(markup).toContain("<video");
     expect(markup).toContain("preload=\"none\"");
-    expect(markup).not.toContain("generator-scroll.mp4");
+    expect(markup).not.toContain("generator-scroll-compressed.mp4");
     expect(markup).toContain("<canvas");
     expect(markup).toContain("aria-hidden=\"true\"");
   });
