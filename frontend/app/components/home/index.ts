@@ -1,0 +1,11 @@
+export { CallToActionSection } from "./call-to-action";
+export { CapabilitiesSection } from "./capabilities";
+export { CompanyStatsSection } from "./company-stats";
+export { FeaturedProducts } from "./featured-products";
+export type { FeaturedProduct } from "./featured-products";
+export { HomeHero } from "./hero";
+export { IndustriesSection } from "./industries";
+export { ManufacturingProcessSection } from "./manufacturing-process";
+export { PageHero } from "./page-hero";
+export { SectionHeading } from "./section-heading";
+export { ServiceIcon } from "./service-icon";

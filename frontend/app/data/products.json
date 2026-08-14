@@ -1,0 +1,744 @@
+[
+  {
+    "name": "UPKAR 15 KVA Generator",
+    "model": "DG-15",
+    "kva": 15,
+    "description": "The UPKAR DG-15 catalog model is rated at 15 KVA and is listed with open or silent configurations plus single- and three-phase variants.",
+    "images": [
+      "/images/sequence/frame_0001.webp"
+    ],
+    "gallery": [
+      "/images/sequence/frame_0001.webp"
+    ],
+    "features": [
+      "15 KVA catalog rating",
+      "Open and silent genset configurations",
+      "Single- and three-phase variants",
+      "Cummins and Stamford catalog options"
+    ],
+    "applications": [
+      "Manufacturing Plants",
+      "Hospitals & Clinics",
+      "Construction Sites",
+      "Commercial Buildings",
+      "Telecom Towers"
+    ],
+    "variants": [
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "15 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "15 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "15 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "15 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "15 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "15 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "15 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "15 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase"
+        }
+      }
+    ],
+    "category": "Industrial DG Sets",
+    "slug": "15-kva"
+  },
+  {
+    "name": "UPKAR 25 KVA Generator",
+    "model": "DG-25",
+    "kva": 25,
+    "description": "The UPKAR DG-25 catalog model is rated at 25 KVA and is listed with open or silent configurations plus single- and three-phase variants.",
+    "images": [
+      "/images/sequence/frame_0001.webp"
+    ],
+    "gallery": [
+      "/images/sequence/frame_0001.webp"
+    ],
+    "features": [
+      "25 KVA catalog rating",
+      "Open and silent genset configurations",
+      "Single- and three-phase variants",
+      "Cummins and Stamford catalog options"
+    ],
+    "applications": [
+      "Manufacturing Plants",
+      "Hospitals & Clinics",
+      "Construction Sites",
+      "Commercial Buildings",
+      "Telecom Towers"
+    ],
+    "variants": [
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "25 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "25 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "25 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "25 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "25 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "25 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "25 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "25 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase"
+        }
+      }
+    ],
+    "category": "Industrial DG Sets",
+    "slug": "25-kva"
+  },
+  {
+    "name": "UPKAR 40 KVA Generator",
+    "model": "DG-40",
+    "kva": 40,
+    "description": "The UPKAR DG-40 catalog model is rated at 40 KVA and is listed with open or silent configurations plus single- and three-phase variants.",
+    "images": [
+      "/images/sequence/frame_0001.webp"
+    ],
+    "gallery": [
+      "/images/sequence/frame_0001.webp"
+    ],
+    "features": [
+      "40 KVA catalog rating",
+      "Open and silent genset configurations",
+      "Single- and three-phase variants",
+      "Cummins and Stamford catalog options"
+    ],
+    "applications": [
+      "Manufacturing Plants",
+      "Hospitals & Clinics",
+      "Construction Sites",
+      "Commercial Buildings",
+      "Telecom Towers"
+    ],
+    "variants": [
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "40 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "40 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "40 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "40 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "40 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "40 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "40 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "40 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase"
+        }
+      }
+    ],
+    "category": "Industrial DG Sets",
+    "slug": "40-kva"
+  },
+  {
+    "name": "UPKAR 62.5 KVA Generator",
+    "model": "DG-62.5",
+    "kva": 62.5,
+    "description": "The UPKAR DG-62.5 catalog model is rated at 62.5 KVA and is listed with open or silent configurations plus single- and three-phase variants.",
+    "images": [
+      "/images/sequence/frame_0001.webp"
+    ],
+    "gallery": [
+      "/images/sequence/frame_0001.webp",
+      "/images/sequence/frame_0030.webp",
+      "/images/sequence/frame_0060.webp",
+      "/images/sequence/frame_0090.webp"
+    ],
+    "features": [
+      "62.5 KVA catalog rating",
+      "Open and silent genset configurations",
+      "Single- and three-phase variants",
+      "Cummins and Stamford catalog options"
+    ],
+    "applications": [
+      "Manufacturing Plants",
+      "Hospitals & Clinics",
+      "Construction Sites",
+      "Commercial Buildings",
+      "Telecom Towers"
+    ],
+    "variants": [
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "62.5 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase",
+          "Engine": "Tata 709",
+          "Voltage": "230 V",
+          "Frequency": "50 Hz",
+          "Fuel Tank Capacity": "150 Ltr",
+          "Fuel Consumption": "7.5 Ltr/hr (at 75% load)",
+          "Dimensions (LxWxH)": "2200 x 950 x 1350 mm",
+          "Weight": "1150 kg"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "62.5 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase",
+          "Engine": "Tata 709",
+          "Voltage": "415 V",
+          "Frequency": "50 Hz",
+          "Fuel Tank Capacity": "150 Ltr",
+          "Fuel Consumption": "7.5 Ltr/hr (at 75% load)",
+          "Dimensions (LxWxH)": "2200 x 950 x 1350 mm",
+          "Weight": "1150 kg"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "62.5 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "62.5 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase",
+          "Engine": "Ashok Leyland AL414",
+          "Voltage": "415 V",
+          "Frequency": "50 Hz",
+          "Fuel Tank Capacity": "150 Ltr",
+          "Fuel Consumption": "7.3 Ltr/hr (at 75% load)",
+          "Dimensions (LxWxH)": "2200 x 950 x 1350 mm",
+          "Weight": "1180 kg"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "62.5 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "62.5 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase",
+          "Engine": "Tata 709",
+          "Voltage": "415 V",
+          "Frequency": "50 Hz",
+          "Fuel Tank Capacity": "150 Ltr",
+          "Fuel Consumption": "7.5 Ltr/hr (at 75% load)",
+          "Dimensions (LxWxH)": "2700 x 1100 x 1550 mm",
+          "Weight": "1350 kg",
+          "Acoustic Enclosure": "CPCB II Compliant"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "62.5 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "62.5 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase",
+          "Engine": "Ashok Leyland AL414",
+          "Voltage": "415 V",
+          "Frequency": "50 Hz",
+          "Fuel Tank Capacity": "150 Ltr",
+          "Fuel Consumption": "7.3 Ltr/hr (at 75% load)",
+          "Dimensions (LxWxH)": "2700 x 1100 x 1550 mm",
+          "Weight": "1380 kg",
+          "Acoustic Enclosure": "CPCB II Compliant"
+        }
+      }
+    ],
+    "category": "Industrial DG Sets",
+    "slug": "62-5-kva"
+  },
+  {
+    "name": "UPKAR 100 KVA Generator",
+    "model": "DG-100",
+    "kva": 100,
+    "description": "The UPKAR DG-100 catalog model is rated at 100 KVA and is listed with open or silent configurations plus single- and three-phase variants.",
+    "images": [
+      "/images/sequence/frame_0001.webp"
+    ],
+    "gallery": [
+      "/images/sequence/frame_0001.webp"
+    ],
+    "features": [
+      "100 KVA catalog rating",
+      "Open and silent genset configurations",
+      "Single- and three-phase variants",
+      "Cummins and Stamford catalog options"
+    ],
+    "applications": [
+      "Manufacturing Plants",
+      "Hospitals & Clinics",
+      "Construction Sites",
+      "Commercial Buildings",
+      "Telecom Towers"
+    ],
+    "variants": [
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "100 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "100 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "100 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "100 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "100 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "100 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "100 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "100 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase"
+        }
+      }
+    ],
+    "category": "Industrial DG Sets",
+    "slug": "100-kva"
+  },
+  {
+    "name": "UPKAR 125 KVA Generator",
+    "model": "DG-125",
+    "kva": 125,
+    "description": "The UPKAR DG-125 catalog model is rated at 125 KVA and is listed with open or silent configurations plus single- and three-phase variants.",
+    "images": [
+      "/images/sequence/frame_0001.webp"
+    ],
+    "gallery": [
+      "/images/sequence/frame_0001.webp"
+    ],
+    "features": [
+      "125 KVA catalog rating",
+      "Open and silent genset configurations",
+      "Single- and three-phase variants",
+      "Cummins and Stamford catalog options"
+    ],
+    "applications": [
+      "Manufacturing Plants",
+      "Hospitals & Clinics",
+      "Construction Sites",
+      "Commercial Buildings",
+      "Telecom Towers"
+    ],
+    "variants": [
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "125 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "125 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "125 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Open Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "125 KVA",
+          "Generator Type": "Open Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "125 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Cummins",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "125 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Cummins",
+          "Phase": "Three Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Single Phase",
+        "specifications": {
+          "Power Rating": "125 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Single Phase"
+        }
+      },
+      {
+        "type": "Silent Genset",
+        "alternator": "Stamford",
+        "phase": "Three Phase",
+        "specifications": {
+          "Power Rating": "125 KVA",
+          "Generator Type": "Silent Genset",
+          "Alternator": "Stamford",
+          "Phase": "Three Phase"
+        }
+      }
+    ],
+    "category": "Industrial DG Sets",
+    "slug": "125-kva"
+  }
+]

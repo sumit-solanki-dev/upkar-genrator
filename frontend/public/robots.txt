@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.upkargenerator.com/sitemap.xml
+Sitemap: https://upkargenerator.com/sitemap.xml

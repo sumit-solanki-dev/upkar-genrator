@@ -1,0 +1,17 @@
+.ug-products-carousel__track,
+.ug-products-carousel__rail {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.ug-products-carousel__track::-webkit-scrollbar,
+.ug-products-carousel__rail::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ug-products-carousel__track,
+  .ug-products-carousel__rail {
+    scroll-behavior: auto;
+  }
+}
