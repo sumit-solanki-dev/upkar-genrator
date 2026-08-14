@@ -5,6 +5,7 @@ import type {
   SequenceManifest,
   SequenceSnapshot,
 } from "./sequence-types";
+import { createSequenceEngine } from "./sequence-video-engine.client";
 
 interface NetworkInformationLike extends EventTarget {
   saveData?: boolean;
@@ -18,18 +19,19 @@ const INITIAL_SNAPSHOT: SequenceSnapshot = {
   status: "idle",
   tier: null,
   hasRenderableFrame: false,
+  renderer: null,
 };
 
 export function useScrollSequence(manifest: SequenceManifest) {
   const sectionRef = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fallbackImageRef = useRef<HTMLImageElement>(null);
   const [snapshot, setSnapshot] = useState<SequenceSnapshot>(INITIAL_SNAPSHOT);
 
   useEffect(() => {
     let disposed = false;
-    let bootGeneration = 0;
     let engine: SequenceEngine | null = null;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -41,35 +43,50 @@ export function useScrollSequence(manifest: SequenceManifest) {
       if (!disposed) setSnapshot(nextSnapshot);
     };
 
-    const boot = async () => {
-      const currentGeneration = ++bootGeneration;
+    const boot = () => {
       engine?.destroy();
       engine = null;
 
       if (shouldStayStatic()) {
-        safelySetSnapshot({ status: "static", tier: null, hasRenderableFrame: false });
+        safelySetSnapshot({
+          status: "static",
+          tier: null,
+          hasRenderableFrame: false,
+          renderer: null,
+        });
         return;
       }
 
       const section = sectionRef.current;
       const pin = pinRef.current;
+      const video = videoRef.current;
       const canvas = canvasRef.current;
       const fallbackImage = fallbackImageRef.current;
 
-      if (!section || !pin || !canvas || !fallbackImage) {
-        safelySetSnapshot({ status: "static", tier: null, hasRenderableFrame: false });
+      if (!section || !pin || !video || !canvas || !fallbackImage) {
+        safelySetSnapshot({
+          status: "static",
+          tier: null,
+          hasRenderableFrame: false,
+          renderer: null,
+        });
         return;
       }
 
-      safelySetSnapshot({ status: "loading", tier: null, hasRenderableFrame: false });
+      safelySetSnapshot({
+        status: "loading",
+        tier: null,
+        hasRenderableFrame: false,
+        renderer: null,
+      });
 
       try {
-        const { createSequenceEngine } = await import("./sequence-engine.client");
-        if (disposed || currentGeneration !== bootGeneration) return;
+        if (disposed) return;
 
         engine = createSequenceEngine({
           section,
           pin,
+          video,
           canvas,
           fallbackImage,
           manifest,
@@ -77,7 +94,12 @@ export function useScrollSequence(manifest: SequenceManifest) {
         });
         engine.start();
       } catch {
-        safelySetSnapshot({ status: "error", tier: null, hasRenderableFrame: false });
+        safelySetSnapshot({
+          status: "error",
+          tier: null,
+          hasRenderableFrame: false,
+          renderer: null,
+        });
       }
     };
 
@@ -85,16 +107,15 @@ export function useScrollSequence(manifest: SequenceManifest) {
       const nextStaticPolicy = shouldStayStatic();
       if (nextStaticPolicy === previousStaticPolicy) return;
       previousStaticPolicy = nextStaticPolicy;
-      void boot();
+      boot();
     };
 
     reducedMotion.addEventListener?.("change", handlePolicyChange);
     connection?.addEventListener?.("change", handlePolicyChange);
-    void boot();
+    boot();
 
     return () => {
       disposed = true;
-      bootGeneration += 1;
       reducedMotion.removeEventListener?.("change", handlePolicyChange);
       connection?.removeEventListener?.("change", handlePolicyChange);
       engine?.destroy();
@@ -106,6 +127,7 @@ export function useScrollSequence(manifest: SequenceManifest) {
     ...snapshot,
     sectionRef,
     pinRef,
+    videoRef,
     canvasRef,
     fallbackImageRef,
   };

@@ -1,5 +1,7 @@
 export type SequenceTierName = "lite" | "mobile" | "full";
 
+export type SequenceRenderer = "video" | "frames";
+
 export type SequenceStatus =
   | "idle"
   | "loading"
@@ -13,6 +15,16 @@ export interface SequencePoster {
   width: number;
   height: number;
   alt: string;
+}
+
+export interface SequenceVideo {
+  src: string;
+  type: string;
+  codec: string;
+  width: number;
+  height: number;
+  frameCount: number;
+  framesPerSecond: number;
 }
 
 export interface SequenceTier {
@@ -32,6 +44,7 @@ export interface SequenceTier {
 
 export interface SequenceManifest {
   poster: SequencePoster;
+  video?: SequenceVideo;
   tiers: Record<SequenceTierName, SequenceTier>;
 }
 
@@ -39,11 +52,13 @@ export interface SequenceSnapshot {
   status: SequenceStatus;
   tier: SequenceTierName | null;
   hasRenderableFrame: boolean;
+  renderer: SequenceRenderer | null;
 }
 
 export interface SequenceElements {
   section: HTMLElement;
   pin: HTMLElement;
+  video: HTMLVideoElement;
   canvas: HTMLCanvasElement;
   fallbackImage: HTMLImageElement;
 }

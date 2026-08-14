@@ -5,6 +5,7 @@ import {
   desiredFrameIndexes,
   frameIndexForProgress,
   frameUrl,
+  mediaTimeForFrame,
 } from "./sequence-core";
 import { generatorSequenceManifest } from "./sequence-manifest";
 import type { CacheValue } from "./sequence-core";
@@ -26,23 +27,36 @@ const tier: SequenceTier = {
 };
 
 describe("sequence frame mapping", () => {
-  it("keeps the normal mobile tier device-sharp and at full frame cadence", () => {
+  it("uses the full 192-frame video with a compact image fallback", () => {
+    const video = generatorSequenceManifest.video;
     const mobile = generatorSequenceManifest.tiers.mobile;
 
-    expect(mobile.frameCount).toBe(192);
-    expect(mobile.width).toBe(1080);
-    expect(mobile.height).toBe(608);
+    expect(video).toMatchObject({
+      frameCount: 192,
+      framesPerSecond: 24,
+      width: 1280,
+      height: 720,
+      type: "video/mp4",
+    });
+    expect(mobile.frameCount).toBe(108);
+    expect(mobile.width).toBe(960);
+    expect(mobile.height).toBe(540);
     expect(mobile.framePath).toContain(
-      "images/generator-sequence-v3/mobile/frame_{frame}.webp",
+      "images/generator-sequence-v2/mobile/frame_{frame}.webp",
     );
-    expect(mobile.maxDevicePixelRatio).toBeGreaterThanOrEqual(2.5);
-    expect(mobile.preloadAhead).toBeGreaterThanOrEqual(6);
   });
 
   it("maps clamped progress to both endpoint frames", () => {
     expect(frameIndexForProgress(-1, 108)).toBe(0);
     expect(frameIndexForProgress(0.5, 108)).toBe(54);
     expect(frameIndexForProgress(2, 108)).toBe(107);
+  });
+
+  it("maps every video frame to the center of its presentation window", () => {
+    expect(mediaTimeForFrame(0, 192, 24, 8)).toBeCloseTo(0.5 / 24, 6);
+    expect(mediaTimeForFrame(96, 192, 24, 8)).toBeCloseTo(96.5 / 24, 6);
+    expect(mediaTimeForFrame(191, 192, 24, 8)).toBeCloseTo(191.5 / 24, 6);
+    expect(mediaTimeForFrame(500, 192, 24, 8)).toBeLessThan(8);
   });
 
   it("creates deterministic, padded frame URLs without replaceAll", () => {

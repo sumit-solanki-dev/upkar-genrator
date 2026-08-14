@@ -11,24 +11,15 @@ interface FrameSetExpectation {
   byteBudget: number;
 }
 
-const frameSets: Record<"full" | "mobile", FrameSetExpectation> = {
-  full: {
+const frameSets: Record<"fallback", FrameSetExpectation> = {
+  fallback: {
     directory: join(
       process.cwd(),
-      "public/images/generator-sequence-v3/frames",
+      "public/images/generator-sequence-v2/mobile",
     ),
-    width: 1280,
-    height: 720,
-    byteBudget: 14_250_000,
-  },
-  mobile: {
-    directory: join(
-      process.cwd(),
-      "public/images/generator-sequence-v3/mobile",
-    ),
-    width: 1080,
-    height: 608,
-    byteBudget: 9_600_000,
+    width: 960,
+    height: 540,
+    byteBudget: 2_100_000,
   },
 };
 
@@ -49,16 +40,16 @@ function dimensionsOfLossyWebp(contents: Buffer): {
 }
 
 describe.each(Object.entries(frameSets))(
-  "high-quality %s sequence assets",
+  "%s sequence assets",
   (_tierName, expectation) => {
     it("keeps the complete cadence, intrinsic size, uniqueness, and byte budget", () => {
       const frameNames = readdirSync(expectation.directory)
-        .filter((name) => /^frame_\d{4}\.webp$/.test(name))
+        .filter((name) => /^frame_\d{3}\.webp$/.test(name))
         .sort();
 
-      expect(frameNames).toHaveLength(192);
-      expect(frameNames.at(0)).toBe("frame_0001.webp");
-      expect(frameNames.at(-1)).toBe("frame_0192.webp");
+      expect(frameNames).toHaveLength(108);
+      expect(frameNames.at(0)).toBe("frame_000.webp");
+      expect(frameNames.at(-1)).toBe("frame_107.webp");
 
       const contents = frameNames.map((name) =>
         readFileSync(join(expectation.directory, name)),
@@ -71,7 +62,7 @@ describe.each(Object.entries(frameSets))(
         0,
       );
 
-      expect(new Set(hashes).size).toBe(192);
+      expect(new Set(hashes).size).toBe(108);
       expect(aggregateBytes).toBeLessThanOrEqual(expectation.byteBudget);
 
       for (const frame of contents) {
@@ -83,3 +74,24 @@ describe.each(Object.entries(frameSets))(
     });
   },
 );
+
+describe("packed scroll sequence", () => {
+  it("keeps all 192 samples in a fast-start H.264 file near two megabytes", () => {
+    const videoPath = join(
+      process.cwd(),
+      "public/images/generator-sequence-v4/generator-scroll.mp4",
+    );
+    const contents = readFileSync(videoPath);
+    const moovOffset = contents.indexOf("moov");
+    const mediaOffset = contents.indexOf("mdat");
+    const sampleSizeOffset = contents.indexOf("stsz");
+
+    expect(contents.toString("ascii", 4, 8)).toBe("ftyp");
+    expect(contents.indexOf("avc1")).toBeGreaterThan(0);
+    expect(moovOffset).toBeGreaterThan(0);
+    expect(mediaOffset).toBeGreaterThan(moovOffset);
+    expect(sampleSizeOffset).toBeGreaterThan(0);
+    expect(contents.readUInt32BE(sampleSizeOffset + 12)).toBe(192);
+    expect(statSync(videoPath).size).toBeLessThanOrEqual(2_020_000);
+  });
+});

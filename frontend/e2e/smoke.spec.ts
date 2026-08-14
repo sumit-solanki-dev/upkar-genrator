@@ -465,23 +465,19 @@ test("open mobile navigation has no serious accessibility violations", async ({
   expect(blockingViolations).toEqual([]);
 });
 
-test("mobile sequence requests later frames as native scrolling advances", async ({
+test("mobile sequence scrubs one packed video without requesting frame files", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chrome", "Mobile regression check");
 
-  const requestedFrames: number[] = [];
-  const requestedFrameUrls: string[] = [];
+  const requestedVideos: string[] = [];
+  const requestedFrames: string[] = [];
   page.on("request", (request) => {
-    const match = request
-      .url()
-      .match(
-        /(?:generator-sequence-v3\/(?:frames|mobile)|generator-sequence-v2\/mobile)\/frame_(\d+)\.webp/,
-      );
-    const frame = match?.[1];
-    if (frame) {
-      requestedFrames.push(Number(frame));
-      requestedFrameUrls.push(request.url());
+    if (request.url().includes("/generator-sequence-v4/generator-scroll.mp4")) {
+      requestedVideos.push(request.url());
+    }
+    if (/generator-sequence-v[23].*\/frame_\d+\.webp/.test(request.url())) {
+      requestedFrames.push(request.url());
     }
   });
 
@@ -497,21 +493,15 @@ test("mobile sequence requests later frames as native scrolling advances", async
     { timeout: 10_000 },
   );
   await expect(sequence).toHaveAttribute("data-sequence-renderable", "true");
+  await expect(sequence).toHaveAttribute("data-sequence-renderer", "video");
 
-  const tier = await sequence.getAttribute("data-sequence-tier");
-  if (tier === "mobile") {
-    const backingScale = await sequence.locator("canvas").evaluate((element) => {
-      const canvas = element as HTMLCanvasElement;
-      return canvas.width / canvas.getBoundingClientRect().width;
-    });
-    expect(backingScale).toBeGreaterThanOrEqual(2.5);
-    expect(requestedFrameUrls.length).toBeGreaterThan(0);
-    expect(
-      requestedFrameUrls.every((url) =>
-        url.includes("/images/generator-sequence-v3/mobile/"),
-      ),
-    ).toBe(true);
-  }
+  const video = sequence.locator("video");
+  await expect(video).toBeVisible();
+  await expect
+    .poll(() =>
+      video.evaluate((element) => (element as HTMLVideoElement).videoWidth),
+    )
+    .toBe(1280);
 
   const scrollTarget = await sequence.evaluate((element) => {
     const section = element as HTMLElement;
@@ -523,15 +513,18 @@ test("mobile sequence requests later frames as native scrolling advances", async
 
   await page.evaluate((top) => window.scrollTo(0, top), scrollTarget);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
-
-  const laterFrameThreshold = tier === "mobile" ? 125 : 45;
   await expect
-    .poll(() => Math.max(...requestedFrames, -1), { timeout: 10_000 })
-    .toBeGreaterThan(laterFrameThreshold);
+    .poll(
+      () => video.evaluate((element) => (element as HTMLVideoElement).currentTime),
+      { timeout: 10_000 },
+    )
+    .toBeGreaterThan(5.5);
+  expect(requestedVideos).toHaveLength(1);
+  expect(requestedFrames).toEqual([]);
   await expect(sequence).toHaveAttribute("data-sequence-status", /^(?:ready|degraded)$/);
 });
 
-test("desktop sequence canvas fits the pinned frame height without stretching", async ({
+test("desktop sequence video fits the pinned frame height without stretching", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "chromium", "Desktop sequence sizing check");
@@ -543,38 +536,46 @@ test("desktop sequence canvas fits the pinned frame height without stretching", 
   await expect(sequence).toHaveAttribute("data-sequence-tier", "full", {
     timeout: 10_000,
   });
+  await expect(sequence).toHaveAttribute("data-sequence-renderer", "video");
+  await expect(sequence).toHaveAttribute("data-sequence-renderable", "true", {
+    timeout: 10_000,
+  });
 
   const sizing = await sequence.evaluate((element) => {
     const pin = element.querySelector<HTMLElement>(".ug-scroll-sequence__pin");
-    const canvas = element.querySelector<HTMLCanvasElement>("canvas");
-    if (!pin || !canvas) throw new Error("Sequence media is unavailable");
+    const video = element.querySelector<HTMLVideoElement>("video");
+    if (!pin || !video) throw new Error("Sequence media is unavailable");
 
     const pinBounds = pin.getBoundingClientRect();
-    const canvasBounds = canvas.getBoundingClientRect();
+    const videoBounds = video.getBoundingClientRect();
 
     return {
       pinHeight: pinBounds.height,
-      canvasHeight: canvasBounds.height,
-      cssAspectRatio: canvasBounds.width / canvasBounds.height,
-      backingAspectRatio: canvas.width / canvas.height,
+      videoHeight: videoBounds.height,
+      cssAspectRatio: videoBounds.width / videoBounds.height,
+      intrinsicAspectRatio: video.videoWidth / video.videoHeight,
     };
   });
 
-  expect(Math.abs(sizing.canvasHeight - sizing.pinHeight)).toBeLessThanOrEqual(1);
+  expect(Math.abs(sizing.videoHeight - sizing.pinHeight)).toBeLessThanOrEqual(1);
   expect(sizing.cssAspectRatio).toBeCloseTo(16 / 9, 2);
-  expect(sizing.backingAspectRatio).toBeCloseTo(16 / 9, 2);
+  expect(sizing.intrinsicAspectRatio).toBeCloseTo(16 / 9, 2);
 });
 
-test("reverse scrolling reuses encoded frames without fetching them again", async ({
+test("reverse scrolling reuses the packed video without another media request", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "chromium", "Desktop sequence cache check");
 
-  const requestCounts = new Map<string, number>();
+  let videoRequests = 0;
+  let frameRequests = 0;
   page.on("request", (request) => {
-    const match = request.url().match(/generator-sequence-v3\/frames\/frame_(\d+)\.webp/);
-    const frame = match?.[1];
-    if (frame) requestCounts.set(frame, (requestCounts.get(frame) ?? 0) + 1);
+    if (request.url().includes("/generator-sequence-v4/generator-scroll.mp4")) {
+      videoRequests += 1;
+    }
+    if (/generator-sequence-v[23].*\/frame_\d+\.webp/.test(request.url())) {
+      frameRequests += 1;
+    }
   });
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -582,6 +583,11 @@ test("reverse scrolling reuses encoded frames without fetching them again", asyn
   await expect(sequence).toHaveAttribute("data-sequence-tier", "full", {
     timeout: 10_000,
   });
+  await expect(sequence).toHaveAttribute("data-sequence-renderer", "video");
+  await expect(sequence).toHaveAttribute("data-sequence-renderable", "true", {
+    timeout: 10_000,
+  });
+  const video = sequence.locator("video");
 
   const position = await sequence.evaluate((element) => {
     const section = element as HTMLElement;
@@ -598,19 +604,28 @@ test("reverse scrolling reuses encoded frames without fetching them again", asyn
     );
   };
 
-  const firstTarget = page.waitForRequest(/frame_0049\.webp/);
   await scrollToProgress(0.25);
-  await firstTarget;
-  await expect.poll(() => requestCounts.get("0049") ?? 0).toBe(1);
+  await expect
+    .poll(() =>
+      video.evaluate((element) => (element as HTMLVideoElement).currentTime),
+    )
+    .toBeGreaterThan(1.8);
 
-  const distantTarget = page.waitForRequest(/frame_0144\.webp/);
   await scrollToProgress(0.75);
-  await distantTarget;
-  await expect.poll(() => requestCounts.get("0144") ?? 0).toBe(1);
+  await expect
+    .poll(() =>
+      video.evaluate((element) => (element as HTMLVideoElement).currentTime),
+    )
+    .toBeGreaterThan(5.7);
 
   await scrollToProgress(0.25);
-  await page.waitForTimeout(600);
-  expect(requestCounts.get("0049")).toBe(1);
+  await expect
+    .poll(() =>
+      video.evaluate((element) => (element as HTMLVideoElement).currentTime),
+    )
+    .toBeLessThan(2.2);
+  expect(videoRequests).toBe(1);
+  expect(frameRequests).toBe(0);
 });
 
 test("the image fallback displays fetched blobs without a second frame request", async ({
@@ -619,6 +634,10 @@ test("the image fallback displays fetched blobs without a second frame request",
   test.skip(testInfo.project.name !== "chromium", "Canvas fallback regression check");
 
   await page.addInitScript(() => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlayType", {
+      configurable: true,
+      value: () => "",
+    });
     Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
       configurable: true,
       value: () => null,
@@ -626,7 +645,7 @@ test("the image fallback displays fetched blobs without a second frame request",
   });
   let firstFrameRequests = 0;
   page.on("request", (request) => {
-    if (/generator-sequence-v3\/frames\/frame_0001\.webp/.test(request.url())) {
+    if (/generator-sequence-v2\/mobile\/frame_000\.webp/.test(request.url())) {
       firstFrameRequests += 1;
     }
   });
@@ -638,6 +657,7 @@ test("the image fallback displays fetched blobs without a second frame request",
   await expect(sequence).toHaveAttribute("data-sequence-renderable", "true", {
     timeout: 10_000,
   });
+  await expect(sequence).toHaveAttribute("data-sequence-renderer", "frames");
   await expect(sequence.locator('img[aria-hidden="true"]')).toBeVisible();
   await page.waitForTimeout(400);
   expect(firstFrameRequests).toBe(1);
@@ -648,14 +668,13 @@ test("reduced motion keeps the sequence static and requests no frames", async ({
 }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chrome", "Mobile regression check");
   await page.emulateMedia({ reducedMotion: "reduce" });
-  const requestedFrames: string[] = [];
+  const requestedAnimationAssets: string[] = [];
   page.on("request", (request) => {
     if (
-      /(?:generator-sequence-v3\/(?:frames|mobile)|generator-sequence-v2\/mobile)\/frame_\d+\.webp/.test(
-        request.url(),
-      )
+      /generator-sequence-v[23].*\/frame_\d+\.webp/.test(request.url()) ||
+      request.url().includes("/generator-sequence-v4/generator-scroll.mp4")
     ) {
-      requestedFrames.push(request.url());
+      requestedAnimationAssets.push(request.url());
     }
   });
 
@@ -665,5 +684,5 @@ test("reduced motion keeps the sequence static and requests no frames", async ({
   await expect(sequence).toHaveAttribute("data-sequence-tier", "poster");
   await expect(sequence).toHaveAttribute("data-sequence-enhanced", "false");
   await expect(sequence).toHaveAttribute("data-sequence-renderable", "false");
-  expect(requestedFrames).toEqual([]);
+  expect(requestedAnimationAssets).toEqual([]);
 });

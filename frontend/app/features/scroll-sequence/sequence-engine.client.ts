@@ -184,7 +184,7 @@ function drawContained(
   context.drawImage(frame.source, x, y, width, height);
 }
 
-export function createSequenceEngine(options: SequenceEngineOptions): SequenceEngine {
+export function createFrameSequenceEngine(options: SequenceEngineOptions): SequenceEngine {
   const { section, pin, canvas, fallbackImage, manifest, onSnapshot } = options;
 
   let destroyed = false;
@@ -231,11 +231,13 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
       status,
       tier: status === "static" ? null : currentTierName,
       hasRenderableFrame: hasDrawnFrame,
+      renderer: status === "static" ? null : ("frames" as const),
     };
     if (
       lastSnapshot?.status === next.status &&
       lastSnapshot.tier === next.tier &&
-      lastSnapshot.hasRenderableFrame === next.hasRenderableFrame
+      lastSnapshot.hasRenderableFrame === next.hasRenderableFrame &&
+      lastSnapshot.renderer === next.renderer
     ) {
       return;
     }

@@ -9,6 +9,18 @@ export function frameIndexForProgress(progress: number, frameCount: number): num
   return Math.round(clamp(progress) * (frameCount - 1));
 }
 
+export function mediaTimeForFrame(
+  frameIndex: number,
+  frameCount: number,
+  framesPerSecond: number,
+  duration: number,
+): number {
+  const index = clamp(Math.round(frameIndex), 0, frameCount - 1);
+  const centeredTime = (index + 0.5) / framesPerSecond;
+  const finalFrameGuard = 0.25 / framesPerSecond;
+  return Math.min(centeredTime, Math.max(0, duration - finalFrameGuard));
+}
+
 export function frameUrl(tier: SequenceTier, index: number): string {
   const frameNumber = tier.frameStart + clamp(Math.round(index), 0, tier.frameCount - 1);
   const paddedFrame = String(frameNumber).padStart(tier.framePad, "0");

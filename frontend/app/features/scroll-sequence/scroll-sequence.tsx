@@ -21,9 +21,11 @@ export function ScrollSequence({
   const {
     status,
     tier,
+    renderer,
     hasRenderableFrame,
     sectionRef,
     pinRef,
+    videoRef,
     canvasRef,
     fallbackImageRef,
   } = useScrollSequence(manifest);
@@ -39,6 +41,7 @@ export function ScrollSequence({
       data-sequence-enhanced={enhanced ? "true" : "false"}
       data-sequence-status={status}
       data-sequence-tier={tier ?? "poster"}
+      data-sequence-renderer={renderer ?? "poster"}
       data-sequence-renderable={hasRenderableFrame ? "true" : "false"}
     >
       <h2 id={titleId} className="sr-only">
@@ -66,10 +69,27 @@ export function ScrollSequence({
           loading="lazy"
         />
 
+        <video
+          ref={videoRef}
+          className={`ug-scroll-sequence__media pointer-events-none z-20 object-contain transition-opacity motion-reduce:transition-none ${
+            hasRenderableFrame && renderer === "video" ? "opacity-100" : "opacity-0"
+          }`}
+          width={manifest.video?.width ?? manifest.poster.width}
+          height={manifest.video?.height ?? manifest.poster.height}
+          muted
+          playsInline
+          preload="none"
+          disablePictureInPicture
+          disableRemotePlayback
+          tabIndex={-1}
+          aria-hidden="true"
+          hidden={renderer !== "video"}
+        />
+
         <img
           ref={fallbackImageRef}
           className={`ug-scroll-sequence__media z-20 object-contain transition-opacity motion-reduce:transition-none ${
-            hasRenderableFrame ? "opacity-100" : "opacity-0"
+            hasRenderableFrame && renderer === "frames" ? "opacity-100" : "opacity-0"
           }`}
           alt=""
           aria-hidden="true"
@@ -80,7 +100,7 @@ export function ScrollSequence({
         <canvas
           ref={canvasRef}
           className={`ug-scroll-sequence__media z-20 transition-opacity motion-reduce:transition-none ${
-            hasRenderableFrame ? "opacity-100" : "opacity-0"
+            hasRenderableFrame && renderer === "frames" ? "opacity-100" : "opacity-0"
           }`}
           width={manifest.poster.width}
           height={manifest.poster.height}
