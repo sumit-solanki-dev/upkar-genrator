@@ -26,7 +26,9 @@
   transform: translate(-50%, -50%);
 }
 
-@media (min-aspect-ratio: 16 / 9) {
+/* Fill the pinned frame on common 3:2 and 16:10 displays. Portrait layouts
+   remain width-contained so the generator is never aggressively cropped. */
+@media (min-aspect-ratio: 3 / 2) {
   .ug-scroll-sequence__media {
     width: auto;
     height: 100%;

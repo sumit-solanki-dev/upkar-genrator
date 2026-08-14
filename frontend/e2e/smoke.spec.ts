@@ -531,6 +531,40 @@ test("mobile sequence requests later frames as native scrolling advances", async
   await expect(sequence).toHaveAttribute("data-sequence-status", /^(?:ready|degraded)$/);
 });
 
+test("desktop sequence canvas fits the pinned frame height without stretching", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "Desktop sequence sizing check");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  const sequence = page.locator(".ug-scroll-sequence");
+  await sequence.scrollIntoViewIfNeeded();
+  await expect(sequence).toHaveAttribute("data-sequence-tier", "full", {
+    timeout: 10_000,
+  });
+
+  const sizing = await sequence.evaluate((element) => {
+    const pin = element.querySelector<HTMLElement>(".ug-scroll-sequence__pin");
+    const canvas = element.querySelector<HTMLCanvasElement>("canvas");
+    if (!pin || !canvas) throw new Error("Sequence media is unavailable");
+
+    const pinBounds = pin.getBoundingClientRect();
+    const canvasBounds = canvas.getBoundingClientRect();
+
+    return {
+      pinHeight: pinBounds.height,
+      canvasHeight: canvasBounds.height,
+      cssAspectRatio: canvasBounds.width / canvasBounds.height,
+      backingAspectRatio: canvas.width / canvas.height,
+    };
+  });
+
+  expect(Math.abs(sizing.canvasHeight - sizing.pinHeight)).toBeLessThanOrEqual(1);
+  expect(sizing.cssAspectRatio).toBeCloseTo(16 / 9, 2);
+  expect(sizing.backingAspectRatio).toBeCloseTo(16 / 9, 2);
+});
+
 test("reverse scrolling reuses encoded frames without fetching them again", async ({
   page,
 }, testInfo) => {
