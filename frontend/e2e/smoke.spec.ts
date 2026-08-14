@@ -166,6 +166,58 @@ test("uses catalog artwork in the product carousel and exposes footer social lin
   }
 });
 
+test("publishes responsive candidates for every raster-heavy page section", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const productImage = page
+    .getByRole("region", { name: "Featured generator models" })
+    .getByRole("img", { name: "Representative industrial diesel generator" })
+    .first();
+  await expect(productImage).toHaveAttribute(
+    "srcset",
+    /optimized-v1\/products\/frame_0001-480\.webp 480w/,
+  );
+
+  const industries = page.locator('section[aria-labelledby="industries-title"]');
+  const firstIndustry = industries.locator("li").first();
+  await expect(firstIndustry.locator("source")).toHaveAttribute(
+    "srcset",
+    /construction-landscape-1024\.webp 1024w/,
+  );
+  await expect(firstIndustry.locator("img")).toHaveAttribute(
+    "srcset",
+    /construction-768\.webp 768w/,
+  );
+
+  const callToAction = page.locator('section[aria-labelledby="home-cta-title"]');
+  await expect(callToAction.locator("source")).toHaveAttribute(
+    "srcset",
+    /cta-mobile-1000\.webp 1000w/,
+  );
+  await expect(callToAction.locator("img")).toHaveAttribute(
+    "srcset",
+    /cta-960\.webp 960w/,
+  );
+});
+
+test("uses a real icon in the floating WhatsApp contact button", async ({ page }) => {
+  await page.goto("/");
+
+  const whatsapp = page.getByRole("link", {
+    name: "Discuss your generator requirement on WhatsApp",
+  });
+  await expect(whatsapp).toHaveAttribute(
+    "href",
+    "https://wa.me/919926277986?text=Hello%20UPKAR%20Generator%2C%20I%20would%20like%20to%20discuss%20a%20generator%20requirement.",
+  );
+  await expect(whatsapp).toHaveAttribute("target", "_blank");
+  await expect(whatsapp).toHaveAttribute("rel", /noopener/);
+  await expect(whatsapp.locator('svg[aria-hidden="true"]')).toHaveCount(1);
+  await expect(whatsapp.getByText("WA", { exact: true })).toHaveCount(0);
+});
+
 test("keeps the hero clear of the fixed navigation and exposes the full product carousel", async ({
   page,
 }) => {
@@ -419,14 +471,18 @@ test("mobile sequence requests later frames as native scrolling advances", async
   test.skip(testInfo.project.name !== "mobile-chrome", "Mobile regression check");
 
   const requestedFrames: number[] = [];
+  const requestedFrameUrls: string[] = [];
   page.on("request", (request) => {
     const match = request
       .url()
       .match(
-        /(?:generator-sequence-v3\/frames|generator-sequence-v2\/(?:lite|mobile))\/frame_(\d+)\.webp/,
+        /(?:generator-sequence-v3\/(?:frames|mobile)|generator-sequence-v2\/mobile)\/frame_(\d+)\.webp/,
       );
     const frame = match?.[1];
-    if (frame) requestedFrames.push(Number(frame));
+    if (frame) {
+      requestedFrames.push(Number(frame));
+      requestedFrameUrls.push(request.url());
+    }
   });
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -449,6 +505,12 @@ test("mobile sequence requests later frames as native scrolling advances", async
       return canvas.width / canvas.getBoundingClientRect().width;
     });
     expect(backingScale).toBeGreaterThanOrEqual(2.5);
+    expect(requestedFrameUrls.length).toBeGreaterThan(0);
+    expect(
+      requestedFrameUrls.every((url) =>
+        url.includes("/images/generator-sequence-v3/mobile/"),
+      ),
+    ).toBe(true);
   }
 
   const scrollTarget = await sequence.evaluate((element) => {
@@ -469,6 +531,84 @@ test("mobile sequence requests later frames as native scrolling advances", async
   await expect(sequence).toHaveAttribute("data-sequence-status", /^(?:ready|degraded)$/);
 });
 
+test("reverse scrolling reuses encoded frames without fetching them again", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "Desktop sequence cache check");
+
+  const requestCounts = new Map<string, number>();
+  page.on("request", (request) => {
+    const match = request.url().match(/generator-sequence-v3\/frames\/frame_(\d+)\.webp/);
+    const frame = match?.[1];
+    if (frame) requestCounts.set(frame, (requestCounts.get(frame) ?? 0) + 1);
+  });
+
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const sequence = page.locator(".ug-scroll-sequence");
+  await expect(sequence).toHaveAttribute("data-sequence-tier", "full", {
+    timeout: 10_000,
+  });
+
+  const position = await sequence.evaluate((element) => {
+    const section = element as HTMLElement;
+    const bounds = section.getBoundingClientRect();
+    return {
+      top: bounds.top + window.scrollY,
+      travel: Math.max(1, section.offsetHeight - window.innerHeight),
+    };
+  });
+  const scrollToProgress = async (progress: number) => {
+    await page.evaluate(
+      ({ top, travel, progress }) => window.scrollTo(0, top + travel * progress),
+      { ...position, progress },
+    );
+  };
+
+  const firstTarget = page.waitForRequest(/frame_0049\.webp/);
+  await scrollToProgress(0.25);
+  await firstTarget;
+  await expect.poll(() => requestCounts.get("0049") ?? 0).toBe(1);
+
+  const distantTarget = page.waitForRequest(/frame_0144\.webp/);
+  await scrollToProgress(0.75);
+  await distantTarget;
+  await expect.poll(() => requestCounts.get("0144") ?? 0).toBe(1);
+
+  await scrollToProgress(0.25);
+  await page.waitForTimeout(600);
+  expect(requestCounts.get("0049")).toBe(1);
+});
+
+test("the image fallback displays fetched blobs without a second frame request", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "Canvas fallback regression check");
+
+  await page.addInitScript(() => {
+    Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+      configurable: true,
+      value: () => null,
+    });
+  });
+  let firstFrameRequests = 0;
+  page.on("request", (request) => {
+    if (/generator-sequence-v3\/frames\/frame_0001\.webp/.test(request.url())) {
+      firstFrameRequests += 1;
+    }
+  });
+
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const sequence = page.locator(".ug-scroll-sequence");
+  await sequence.scrollIntoViewIfNeeded();
+  await expect.poll(() => firstFrameRequests, { timeout: 10_000 }).toBe(1);
+  await expect(sequence).toHaveAttribute("data-sequence-renderable", "true", {
+    timeout: 10_000,
+  });
+  await expect(sequence.locator('img[aria-hidden="true"]')).toBeVisible();
+  await page.waitForTimeout(400);
+  expect(firstFrameRequests).toBe(1);
+});
+
 test("reduced motion keeps the sequence static and requests no frames", async ({
   page,
 }, testInfo) => {
@@ -477,7 +617,7 @@ test("reduced motion keeps the sequence static and requests no frames", async ({
   const requestedFrames: string[] = [];
   page.on("request", (request) => {
     if (
-      /(?:generator-sequence-v3\/frames|generator-sequence-v2\/(?:lite|mobile))\/frame_\d+\.webp/.test(
+      /(?:generator-sequence-v3\/(?:frames|mobile)|generator-sequence-v2\/mobile)\/frame_\d+\.webp/.test(
         request.url(),
       )
     ) {

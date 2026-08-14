@@ -26,14 +26,14 @@ const tier: SequenceTier = {
 };
 
 describe("sequence frame mapping", () => {
-  it("keeps the normal mobile tier at full resolution and full frame cadence", () => {
+  it("keeps the normal mobile tier device-sharp and at full frame cadence", () => {
     const mobile = generatorSequenceManifest.tiers.mobile;
 
     expect(mobile.frameCount).toBe(192);
-    expect(mobile.width).toBe(1280);
-    expect(mobile.height).toBe(720);
+    expect(mobile.width).toBe(1080);
+    expect(mobile.height).toBe(608);
     expect(mobile.framePath).toContain(
-      "images/generator-sequence-v3/frames/frame_{frame}.webp",
+      "images/generator-sequence-v3/mobile/frame_{frame}.webp",
     );
     expect(mobile.maxDevicePixelRatio).toBeGreaterThanOrEqual(2.5);
     expect(mobile.preloadAhead).toBeGreaterThanOrEqual(6);
@@ -91,5 +91,18 @@ describe("ByteLruCache", () => {
     cache.clear();
     expect(protectedDispose).toHaveBeenCalledOnce();
     expect(cache.bytes).toBe(0);
+  });
+
+  it("removes and disposes a single cached entry", () => {
+    const cache = new ByteLruCache<CacheValue>(10);
+    const dispose = vi.fn();
+
+    cache.set(1, entry(4, dispose));
+
+    expect(cache.delete(1)).toBe(true);
+    expect(cache.delete(1)).toBe(false);
+    expect(cache.size).toBe(0);
+    expect(cache.bytes).toBe(0);
+    expect(dispose).toHaveBeenCalledOnce();
   });
 });

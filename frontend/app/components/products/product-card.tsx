@@ -1,8 +1,10 @@
 import { Link } from "react-router";
 import type { Product } from "~/data/products";
+import { productImageSrcSet } from "~/lib/responsive-images";
 
 export function ProductCard({ product }: { product: Product }) {
   const phases = [...new Set(product.variants.map((variant) => variant.phase))].join(", ");
+  const image = product.images[0] ?? "/images/generator-hero.svg";
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
@@ -15,10 +17,12 @@ export function ProductCard({ product }: { product: Product }) {
           alt="Representative industrial diesel generator"
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           decoding="async"
-          height={620}
+          height={720}
           loading="lazy"
-          src={product.images[0]}
-          width={980}
+          src={image}
+          srcSet={productImageSrcSet(image)}
+          sizes="(min-width: 1280px) 389px, (min-width: 1024px) calc((100vw - 6rem) / 3), (min-width: 640px) calc((100vw - 4.5rem) / 2), calc(100vw - 2rem)"
+          width={1280}
         />
         <span className="absolute bottom-2 right-2 rounded bg-slate-950/85 px-2 py-1 text-xs font-semibold text-white">
           Representative image

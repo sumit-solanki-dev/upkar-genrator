@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { ToggleButton } from "@heroui/react/toggle-button";
 
+import { productImageSrcSet } from "~/lib/responsive-images";
+
 export function ProductGallery({ images, productName }: { images: readonly string[]; productName: string }) {
   const gallery = images.length > 0 ? images : ["/images/generator-hero.svg"];
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const selectedImage =
+    gallery[selectedIndex] ?? gallery[0] ?? "/images/generator-hero.svg";
 
   return (
     <div>
@@ -14,7 +18,9 @@ export function ProductGallery({ images, productName }: { images: readonly strin
           decoding="async"
           fetchPriority="high"
           height={720}
-          src={gallery[selectedIndex]}
+          src={selectedImage}
+          srcSet={productImageSrcSet(selectedImage)}
+          sizes="(min-width: 1280px) 608px, (min-width: 1024px) 48vw, calc(100vw - 2rem)"
           width={1280}
         />
       </div>
@@ -33,7 +39,17 @@ export function ProductGallery({ images, productName }: { images: readonly strin
               onPress={() => setSelectedIndex(index)}
               variant="ghost"
             >
-              <img alt="" className="h-12 w-16 object-cover" height={48} loading="lazy" src={image} width={64} />
+              <img
+                alt=""
+                className="h-12 w-16 object-cover"
+                height={48}
+                loading="lazy"
+                decoding="async"
+                src={image}
+                srcSet={productImageSrcSet(image)}
+                sizes="64px"
+                width={64}
+              />
             </ToggleButton>
           ))}
         </div>

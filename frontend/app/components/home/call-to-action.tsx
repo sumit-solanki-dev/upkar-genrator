@@ -8,15 +8,24 @@ export function CallToActionSection() {
       aria-labelledby="home-cta-title"
       className="relative isolate overflow-hidden bg-slate-950 py-20 text-white sm:py-24"
     >
-      <img
-        src="/images/sequence/CTA-img.webp"
-        alt=""
-        width={1448}
-        height={1086}
-        loading="lazy"
-        decoding="async"
-        className="absolute inset-0 -z-20 h-full w-full object-cover"
-      />
+      <picture>
+        <source
+          media="(max-width: 480px)"
+          srcSet="/images/optimized-v1/cta/cta-mobile-500.webp 500w, /images/optimized-v1/cta/cta-mobile-1000.webp 1000w"
+          sizes="100vw"
+        />
+        <img
+          src="/images/sequence/CTA-img.webp"
+          srcSet="/images/optimized-v1/cta/cta-640.webp 640w, /images/optimized-v1/cta/cta-960.webp 960w, /images/sequence/CTA-img.webp 1448w"
+          sizes="100vw"
+          alt=""
+          width={1448}
+          height={1086}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
+        />
+      </picture>
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-950/50"
@@ -55,4 +64,3 @@ export function CallToActionSection() {
     </section>
   );
 }
-

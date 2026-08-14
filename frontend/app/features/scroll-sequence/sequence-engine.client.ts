@@ -23,9 +23,15 @@ interface NavigatorWithHints extends Navigator {
 
 interface DecodedFrame {
   source: CanvasImageSource;
-  url: string;
+  blob: Blob;
   width: number;
   height: number;
+  bytes: number;
+  dispose: () => void;
+}
+
+interface EncodedFrame {
+  blob: Blob;
   bytes: number;
   dispose: () => void;
 }
@@ -38,6 +44,7 @@ interface ActiveLoad {
 const FIRST_FRAME_TIMEOUT_MS = 6_000;
 const CONTEXT_RESTORE_TIMEOUT_MS = 2_000;
 const FAILURE_WINDOW_SIZE = 20;
+const MEBIBYTE = 1024 * 1024;
 
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
@@ -62,8 +69,7 @@ function chooseTierName(): SequenceTierName {
   if (hasSlowConnection || hasLowMemory) return "lite";
 
   const mobileViewport = window.matchMedia("(max-width: 767px)").matches;
-  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
-  return mobileViewport || coarsePointer ? "mobile" : "full";
+  return mobileViewport ? "mobile" : "full";
 }
 
 async function decodeBlob(blob: Blob, signal: AbortSignal): Promise<DecodedFrame> {
@@ -79,10 +85,10 @@ async function decodeBlob(blob: Blob, signal: AbortSignal): Promise<DecodedFrame
 
       return {
         source: bitmap,
+        blob,
         width: bitmap.width,
         height: bitmap.height,
         bytes: bitmap.width * bitmap.height * 4,
-        url: "",
         dispose: () => bitmap.close(),
       };
     } catch (error) {
@@ -120,10 +126,10 @@ async function decodeBlob(blob: Blob, signal: AbortSignal): Promise<DecodedFrame
 
     return {
       source: image,
+      blob,
       width: image.naturalWidth,
       height: image.naturalHeight,
       bytes: image.naturalWidth * image.naturalHeight * 4,
-      url: objectUrl,
       dispose: () => {
         image.removeAttribute("src");
         URL.revokeObjectURL(objectUrl);
@@ -136,10 +142,7 @@ async function decodeBlob(blob: Blob, signal: AbortSignal): Promise<DecodedFrame
   }
 }
 
-async function fetchAndDecodeFrame(
-  url: string,
-  signal: AbortSignal,
-): Promise<DecodedFrame> {
+async function fetchFrameBlob(url: string, signal: AbortSignal): Promise<Blob> {
   let lastError: unknown;
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -151,9 +154,7 @@ async function fetchAndDecodeFrame(
       });
 
       if (!response.ok) throw new Error(`Frame request failed (${response.status})`);
-      const frame = await decodeBlob(await response.blob(), signal);
-      frame.url = url;
-      return frame;
+      return await response.blob();
     } catch (error) {
       if (signal.aborted || isAbortError(error)) throw error;
       lastError = error;
@@ -198,6 +199,9 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
   let currentTierName = chooseTierName();
   let tier = manifest.tiers[currentTierName];
   let cache = new ByteLruCache<DecodedFrame>(tier.cacheBudgetBytes);
+  let encodedCache = new ByteLruCache<EncodedFrame>(
+    Math.max(4 * MEBIBYTE, Math.floor(tier.cacheBudgetBytes / 2)),
+  );
   let queue: number[] = [];
   let desired = new Set<number>();
   let targetFrame = 0;
@@ -209,6 +213,7 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
   let firstFrameTimer = 0;
   let contextRestoreTimer = 0;
   let fallbackRequestGeneration = 0;
+  let fallbackLoadCleanup: (() => void) | null = null;
   let stableViewportHeight = Math.max(1, pin.getBoundingClientRect().height || window.innerHeight);
   let lastViewportWidth = window.innerWidth;
   let lastViewportHeight = stableViewportHeight;
@@ -259,7 +264,10 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
     terminalFallback = true;
     abortLoads();
     cache.clear();
+    encodedCache.clear();
     desired.clear();
+    fallbackLoadCleanup?.();
+    fallbackLoadCleanup = null;
     if (!hasDrawnFrame) {
       canvas.hidden = true;
       fallbackImage.hidden = true;
@@ -313,9 +321,13 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
     if (renderedFrame !== null) drawBestFrame(true);
   }
 
-  function renderFallbackImage(url: string, index: number): void {
+  function renderFallbackImage(blob: Blob, index: number): void {
     const requestGeneration = ++fallbackRequestGeneration;
-    if (fallbackImage.src === url && fallbackImage.complete && fallbackImage.naturalWidth > 0) {
+    if (
+      renderedFrame === index &&
+      fallbackImage.complete &&
+      fallbackImage.naturalWidth > 0
+    ) {
       fallbackImage.hidden = false;
       canvas.hidden = true;
       renderedFrame = index;
@@ -325,7 +337,17 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
       return;
     }
 
-    fallbackImage.onload = () => {
+    fallbackLoadCleanup?.();
+    const objectUrl = URL.createObjectURL(blob);
+
+    const cleanup = () => {
+      fallbackImage.removeEventListener("load", handleLoad);
+      fallbackImage.removeEventListener("error", handleError);
+      URL.revokeObjectURL(objectUrl);
+      if (fallbackLoadCleanup === cleanup) fallbackLoadCleanup = null;
+    };
+    const handleLoad = () => {
+      cleanup();
       if (destroyed || requestGeneration !== fallbackRequestGeneration) return;
       fallbackImage.hidden = false;
       canvas.hidden = true;
@@ -334,11 +356,15 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
       clearFirstFrameTimer();
       emit("ready");
     };
-    fallbackImage.onerror = () => {
+    const handleError = () => {
+      cleanup();
       if (destroyed || requestGeneration !== fallbackRequestGeneration) return;
       recordOutcome(index, false);
     };
-    if (fallbackImage.src !== url) fallbackImage.src = url;
+    fallbackLoadCleanup = cleanup;
+    fallbackImage.addEventListener("load", handleLoad, { once: true });
+    fallbackImage.addEventListener("error", handleError, { once: true });
+    fallbackImage.src = objectUrl;
   }
 
   function selectImageRenderer(): void {
@@ -378,7 +404,7 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
     if (!frame) return;
 
     if (usingImageRenderer || !context) {
-      renderFallbackImage(frame.url, candidate);
+      renderFallbackImage(frame.blob, candidate);
       return;
     }
 
@@ -400,6 +426,38 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
     return Math.abs(index - targetFrame) <= retentionRadius;
   }
 
+  async function loadFrame(
+    index: number,
+    url: string,
+    signal: AbortSignal,
+    generation: number,
+  ): Promise<DecodedFrame | null> {
+    let encoded = encodedCache.get(index);
+    if (!encoded) {
+      const blob = await fetchFrameBlob(url, signal);
+      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+
+      encoded = { blob, bytes: blob.size, dispose: () => undefined };
+      encodedCache.set(index, encoded, new Set([index, targetFrame]));
+    }
+
+    if (
+      destroyed ||
+      signal.aborted ||
+      generation !== loadGeneration ||
+      !isUsefulLoad(index)
+    ) {
+      return null;
+    }
+
+    try {
+      return await decodeBlob(encoded.blob, signal);
+    } catch (error) {
+      if (!signal.aborted && !isAbortError(error)) encodedCache.delete(index);
+      throw error;
+    }
+  }
+
   function pumpQueue(): void {
     if (destroyed || terminalFallback || pagePaused || !nearSection) return;
 
@@ -411,9 +469,11 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
       const generation = loadGeneration;
       activeLoads.set(index, { controller, generation });
       const url = resolveAssetUrl(frameUrl(tier, index));
+      let hardFailed = false;
 
-      void fetchAndDecodeFrame(url, controller.signal)
+      void loadFrame(index, url, controller.signal, generation)
         .then((frame) => {
+          if (!frame) return;
           if (
             destroyed ||
             controller.signal.aborted ||
@@ -430,6 +490,7 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
         })
         .catch((error: unknown) => {
           if (!controller.signal.aborted && !isAbortError(error) && !destroyed) {
+            hardFailed = true;
             recordOutcome(index, false);
             drawBestFrame();
           }
@@ -441,6 +502,7 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
             if (
               !destroyed &&
               !terminalFallback &&
+              !hardFailed &&
               desired.has(index) &&
               !cache.has(index) &&
               !queue.includes(index)
@@ -463,12 +525,6 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
     const ordered = desiredFrameIndexes(targetFrame, direction, tier);
     desired = new Set(ordered);
     queue = ordered.filter((index) => !cache.has(index) && !activeLoads.has(index));
-
-    for (const [index, load] of activeLoads) {
-      if (!isUsefulLoad(index)) {
-        load.controller.abort();
-      }
-    }
 
     cache.evict(protectedCacheKeys());
     drawBestFrame();
@@ -506,6 +562,7 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
     loadGeneration += 1;
     abortLoads();
     cache.clear();
+    encodedCache.clear();
     desired.clear();
     failureOutcomes = [];
     consecutiveTargetFailures = 0;
@@ -515,6 +572,9 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
     currentTierName = nextTierName;
     tier = manifest.tiers[currentTierName];
     cache = new ByteLruCache<DecodedFrame>(tier.cacheBudgetBytes);
+    encodedCache = new ByteLruCache<EncodedFrame>(
+      Math.max(4 * MEBIBYTE, Math.floor(tier.cacheBudgetBytes / 2)),
+    );
     resizeCanvas();
     emit("loading");
     armFirstFrameTimeout();
@@ -685,13 +745,15 @@ export function createSequenceEngine(options: SequenceEngineOptions): SequenceEn
     cancelScheduledFrame();
     abortLoads();
     cache.clear();
+    encodedCache.clear();
     desired.clear();
     clearFirstFrameTimer();
     window.clearTimeout(orientationTimer);
     window.clearTimeout(contextRestoreTimer);
     fallbackRequestGeneration += 1;
-    fallbackImage.onload = null;
-    fallbackImage.onerror = null;
+    fallbackLoadCleanup?.();
+    fallbackLoadCleanup = null;
+    fallbackImage.removeAttribute("src");
 
     intersectionObserver?.disconnect();
     resizeObserver?.disconnect();

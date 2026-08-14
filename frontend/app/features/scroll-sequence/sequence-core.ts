@@ -98,6 +98,16 @@ export class ByteLruCache<T extends CacheValue> {
     this.evict(protectedKeys);
   }
 
+  delete(key: number): boolean {
+    const value = this.#entries.get(key);
+    if (!value) return false;
+
+    this.#entries.delete(key);
+    this.#bytes -= value.bytes;
+    value.dispose();
+    return true;
+  }
+
   evict(protectedKeys: ReadonlySet<number>): void {
     if (this.#bytes <= this.budgetBytes) return;
 

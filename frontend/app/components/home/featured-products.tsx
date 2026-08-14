@@ -9,6 +9,7 @@ import { ToggleButton } from "@heroui/react/toggle-button";
 import { Link } from "react-router";
 
 import { SectionHeading } from "./section-heading";
+import { productImageSrcSet } from "~/lib/responsive-images";
 import "./featured-products.css";
 
 function prefersReducedMotion(): boolean {
@@ -251,9 +252,11 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
                     </span>
                     <img
                       src={image}
+                      srcSet={productImageSrcSet(image)}
+                      sizes="(min-width: 1280px) 700px, (min-width: 1024px) 56vw, calc(100vw - 2rem)"
                       alt="Representative industrial diesel generator"
-                      width={980}
-                      height={620}
+                      width={1280}
+                      height={720}
                       loading="lazy"
                       decoding="async"
                       className="h-full w-full object-cover transition duration-500 motion-safe:group-hover:scale-[1.025]"
