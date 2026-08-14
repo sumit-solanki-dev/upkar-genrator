@@ -332,7 +332,7 @@ function SiteHeader() {
         inert={!menuOpen}
         ref={menuPanel}
       >
-        <div className="px-2 pb-3 pt-1">
+        {/* <div className="px-2 pb-3 pt-1">
           <div>
             <p
               className="text-xs font-black uppercase tracking-[0.2em] text-orange-700"
@@ -342,7 +342,7 @@ function SiteHeader() {
             </p>
             <p className="mt-1 text-sm text-slate-500">Choose where you want to go.</p>
           </div>
-        </div>
+        </div> */}
 
         <nav aria-label="Mobile primary navigation" className="grid gap-1">
           {primaryNavigation.map((item) => (
